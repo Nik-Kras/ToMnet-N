@@ -10,7 +10,11 @@ class GridWorld:
         #The first layer contains the obstacles
         #The second layer contains the rewards
         #self.world_matrix = np.zeros((tot_row, tot_col, 2))
-        self.transition_matrix = np.ones((self.action_space_size, self.action_space_size))/ self.action_space_size
+
+        # Originally agent was started as random, I changed to be deterministic ( [0.5, 0.5] -> [1, 0] )
+        #self.transition_matrix = np.ones((self.action_space_size, self.action_space_size))/ self.action_space_size
+        self.transition_matrix = np.eye(self.action_space_size)
+
         #self.transition_array = np.ones(self.action_space_size) / self.action_space_size
         self.reward_matrix = np.zeros((tot_row, tot_col))
         self.state_matrix = np.zeros((tot_row, tot_col))
