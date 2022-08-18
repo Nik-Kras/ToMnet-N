@@ -56,7 +56,7 @@ class GridWorld:
         The input to the function is a matrix with the
         same size of the world
         -1 for states which are not walkable.
-        +1 for terminal states
+        +1 for terminal states [+1, +2, +3, +4] - for 4 different goals
          0 for all the walkable states (non terminal)
         The following matrix represents the 4x3 world
         used in the series "dissecting reinforcement learning"
@@ -68,12 +68,27 @@ class GridWorld:
             raise ValueError('The shape of the matrix does not match with the shape of the world.')
         self.state_matrix = state_matrix
 
-    def setPosition(self, index_row=None, index_col=None):
-        ''' Set the position of the robot in a specific state.
+    def setPosition(self):
+        ''' Set the position of a player and 4 Goals randomly
+            But only on a path.
+            ! Before using this method make sure you generated walls and put them
+              like game.setStateMatrix(state_matrix)
         '''
-        if(index_row is None or index_col is None): self.position = [np.random.randint(self.world_row),
-                                                                     np.random.randint(self.world_col)]
-        else: self.position = [index_row, index_col]
+
+        # Next objects must be placed on the path: Player, Goal 1, Goal 2, Goal 3, Goal 4
+        objectsToPlace = [10, 1, 2, 3, 4]
+        for object in objectsToPlace:
+            randomRow = np.random.randint(self.world_row)
+            randomCol = np.random.randint(self.world_col)
+            # Ensure that the obj is placed on the path
+            # The coordinates will be changed until it finds a clear cell
+            while self.state_matrix[randomRow][randomCol] != 0:
+                randomRow = np.random.randint(self.world_row)
+                randomCol = np.random.randint(self.world_col)
+                print(self.state_matrix[randomRow][randomCol])
+            self.state_matrix[randomRow, randomCol] = object    # Record obj position on the map
+            if object == 10:
+                self.position = [randomRow, randomCol]
 
     def render(self):
         ''' Print the current world in the terminal.
@@ -86,11 +101,35 @@ class GridWorld:
         for row in range(self.world_row):
             row_string = ""
             for col in range(self.world_col):
-                if(self.position == [row, col]): row_string += u" \u25CB " # u" \u25CC "
+
+                # Draw
+                if self.position == [row, col]: row_string += u" \u25CB " # u" \u25CC "
+
+                # Draw player, walls, paths and goals
                 else:
-                    if(self.state_matrix[row, col] == 0): row_string += ' - '
-                    elif(self.state_matrix[row, col] == -1): row_string += ' # '
-                    elif(self.state_matrix[row, col] == +1): row_string += ' * '
+                    match self.state_matrix[row, col]:
+                        # Wall
+                        case -1:
+                            row_string += ' # '
+                        # Path
+                        case 0:
+                            row_string += ' - '
+                        # Goal 1
+                        case 1:
+                            row_string += ' A '
+                        # Goal 2
+                        case 2:
+                            row_string += ' B '
+                        # Goal 3
+                        case 3:
+                            row_string += ' C '
+                        # Goal 4
+                        case 4:
+                            row_string += ' D '
+                        # Player
+                        case 10:
+                            row_string += u" \u25CB "  # u" \u25CC "
+
             row_string += '\n'
             graph += row_string
         print(graph)

@@ -11,8 +11,7 @@ game.render()
 
 #Define the state matrix
 Generator = Grid(SIZE)
-state_matrix = Generator.GenerateMap()
-print("State Matrix:")
-print(state_matrix)
+state_matrix = Generator.GenerateMap() - 1
 game.setStateMatrix(state_matrix)
+game.setPosition()
 game.render()
