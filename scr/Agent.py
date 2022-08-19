@@ -23,7 +23,8 @@ class AgentRL:
 
     def choseAction(self):
         tensor_data = tf.convert_to_tensor(self.observedWorld)
-        tensor_data = tf.expand_dims(tensor_data, axis = 0)
+        tensor_data = tf.expand_dims(tensor_data, axis = -1)    # add one dimention for features
+        tensor_data = tf.expand_dims(tensor_data, axis =  0)    # add one dimention for batch size
 
         # tensor_data = tf.reshape(tensor_data, shape=(1,30,30))
 
@@ -50,9 +51,26 @@ class ModelRL:
         super().__init__()
 
         self.model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(tot_row, tot_col)),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(4)
+            Input(shape=(tot_row, tot_col, 1)),                     # batch_size (None), width, high, features!
+            Conv2D(filters=16, kernel_size=(3, 3), padding="same"),
+            ReLU(),
+            Conv2D(filters=32, kernel_size=(3, 3), padding="same"),
+            ReLU(),
+            MaxPooling2D(),
+            Conv2D(filters=32, kernel_size=(3, 3), padding="same"),
+            ReLU(),
+            Conv2D(filters=64, kernel_size=(3, 3), padding="same"),
+            ReLU(),
+            MaxPooling2D(),
+
+            Flatten(),
+
+            Dense(128),
+            ReLU(),
+            Dense(32),
+            ReLU(),
+            Dense(units=actionsSize),
+            Softmax()
         ])
         """
         self.inputLayer = Input(shape=(tot_row, tot_col))

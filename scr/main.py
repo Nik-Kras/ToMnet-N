@@ -13,7 +13,7 @@ ROWS = 30
 COLS = 30
 
 game = Environment.GridWorld(tot_row = ROWS, tot_col = COLS)
-game.render()
+# game.render()
 
 #Define the state matrix
 Generator = Grid(SIZE)
