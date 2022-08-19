@@ -31,9 +31,11 @@ class AgentRL:
         print(tensor_data)
         print(tensor_data.shape)
 
-        q_values = self.model.call(tensor_data)
-        action = max(q_values)
-        return q_values
+        q_values = self.model.call(tensor_data)[0]
+        action = tf.argmax(q_values)
+        print("Q-values: ", q_values)
+        print("The best action: ", action)
+        return action
 
     def updateWorldObservation(self, newWorld):
         if np.shape(newWorld) == np.shape(self.observedWorld):
@@ -72,28 +74,6 @@ class ModelRL:
             Dense(units=actionsSize),
             Softmax()
         ])
-        """
-        self.inputLayer = Input(shape=(tot_row, tot_col))
-        self.conv1 = Conv2D(filters=16, kernel_size=(3, 3), padding="same")
-        self.reluConv1 = ReLU()
-        self.conv2 = Conv2D(filters=32, kernel_size=(3, 3), padding="same")
-        self.reluConv2 = ReLU()
-        self.pool1 = MaxPooling2D()
-        self.conv3 = Conv2D(filters=32, kernel_size=(3, 3), padding="same")
-        self.reluConv3 = ReLU()
-        self.conv4 = Conv2D(filters=64, kernel_size=(3, 3), padding="same")
-        self.reluConv4 = ReLU()
-        self.pool2 = MaxPooling2D()
-
-        self.flatten = Flatten()
-
-        self.dense1 = Dense(128)
-        self.reluDense1 = ReLU()
-        self.dense2 = Dense(32)
-        self.reluDense2 = ReLU()
-        self.dense3 = Dense(actionsSize)
-        self.outputLayer = Softmax()
-        """
 
     """
         Use the model architecture to get the output
@@ -101,27 +81,3 @@ class ModelRL:
     def call(self, inputs):
 
         return self.model.predict(inputs)
-        """
-        x = self.inputLayer(inputs)
-        x = self.conv1(x)
-        x = self.reluConv1(x)
-        x = self.conv2(x)
-        x = self.reluConv2(x)
-        x = self.pool1(x)
-        x = self.conv3(x)
-        x = self.reluConv3(x)
-        x = self.conv4(x)
-        x = self.reluConv4(x)
-        x = self.pool2(x)
-
-        x = self.flatten(x)
-
-        x = self.dense1(x)
-        x = self.reluDense1(x)
-        x = self.dense2(x)
-        x = self.reluDense2(x)
-        x = self.dense3(x)
-        x = self.outputLayer(x)
-        return x
-
-        """
