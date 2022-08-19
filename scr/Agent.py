@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import keras
+import tensorflow as tf
 from keras.layers import *
 
 class AgentRL:
@@ -22,17 +22,25 @@ class AgentRL:
         self.model = ModelRL(actionsSize, tot_row, tot_col)
 
     def choseAction(self):
-        q_values = self.model.call(self.observedWorld)
+        tensor_data = tf.convert_to_tensor(self.observedWorld)
+        tensor_data = tf.expand_dims(tensor_data, axis = 0)
+
+        # tensor_data = tf.reshape(tensor_data, shape=(1,30,30))
+
+        print(tensor_data)
+        print(tensor_data.shape)
+
+        q_values = self.model.call(tensor_data)
         action = max(q_values)
-        return action
+        return q_values
 
     def updateWorldObservation(self, newWorld):
         if np.shape(newWorld) == np.shape(self.observedWorld):
             self.observedWorld = newWorld
-            plt.title("World Map")
-            plt.axis('off')
-            plt.imshow(self.observedWorld)
-            plt.show()
+            #plt.title("World Map")
+            #plt.axis('off')
+            #plt.imshow(self.observedWorld)
+            #plt.show()
         else:
             print("Wrong shape of the new world state!")
 
@@ -41,6 +49,12 @@ class ModelRL:
     def __init__(self, actionsSize, tot_row=30, tot_col=30):
         super().__init__()
 
+        self.model = tf.keras.Sequential([
+            tf.keras.layers.Input(shape=(tot_row, tot_col)),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(4)
+        ])
+        """
         self.inputLayer = Input(shape=(tot_row, tot_col))
         self.conv1 = Conv2D(filters=16, kernel_size=(3, 3), padding="same")
         self.reluConv1 = ReLU()
@@ -61,12 +75,15 @@ class ModelRL:
         self.reluDense2 = ReLU()
         self.dense3 = Dense(actionsSize)
         self.outputLayer = Softmax()
+        """
 
     """
         Use the model architecture to get the output
     """
     def call(self, inputs):
 
+        return self.model.predict(inputs)
+        """
         x = self.inputLayer(inputs)
         x = self.conv1(x)
         x = self.reluConv1(x)
@@ -88,3 +105,5 @@ class ModelRL:
         x = self.dense3(x)
         x = self.outputLayer(x)
         return x
+
+        """
