@@ -90,6 +90,9 @@ class GridWorld:
             if object == 10:
                 self.position = [randomRow, randomCol]
 
+    def getWorldState(self):
+        return self.state_matrix
+
     def render(self):
         ''' Print the current world in the terminal.
         O represents the robot position
@@ -149,7 +152,8 @@ class GridWorld:
         #reward = self.reward_matrix[self.position[0], self.position[1]]
         return self.position
 
-    def step(self, action):
+    # CHECK THE FUNCTION!
+    def step(self, action, type="random"):
         ''' One step in the world.
         [observation, reward, done = env.step(action)]
         The robot moves one step in the world based on the action given.
@@ -161,9 +165,19 @@ class GridWorld:
         if(action >= self.action_space_size):
             raise ValueError('The action is not included in the action space.')
 
-        #Based on the current action and the probability derived
-        #from the trasition model it chooses a new actio to perform
-        action = np.random.choice(4, 1, p=self.transition_matrix[int(action),:])
+        # Based on the current action and the probability derived
+        # from the trasition model it chooses a new actio to perform
+        if type == "random":
+            # Picking randomly an action in accordance to the probabilities
+            # Stored in transition_matrix
+            action = np.random.choice(4, 1, p=self.transition_matrix[int(action), :])
+        elif type == "optimal":
+            # Picking the action with highest probability
+            # Stored in transition_matrix
+            action = action
+        else:
+            print("The type is wrong!")
+
         #action = self.transition_model(action)
 
         #Generating a new position based on the current position and action
@@ -183,4 +197,6 @@ class GridWorld:
         reward = self.reward_matrix[self.position[0], self.position[1]]
         #Done is True if the state is a terminal state
         done = bool(self.state_matrix[self.position[0], self.position[1]])
+
+        # should output self.state_matrix, reward, done
         return self.position, reward, done
