@@ -40,10 +40,10 @@ class AgentRL:
     def updateWorldObservation(self, newWorld):
         if np.shape(newWorld) == np.shape(self.observedWorld):
             self.observedWorld = newWorld
-            #plt.title("World Map")
-            #plt.axis('off')
-            #plt.imshow(self.observedWorld)
-            #plt.show()
+            plt.title("World Map")
+            plt.axis('off')
+            plt.imshow(self.observedWorld)
+            plt.show()
         else:
             print("Wrong shape of the new world state!")
 
