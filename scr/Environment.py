@@ -44,8 +44,6 @@ class GridWorld:
         #self.transition_matrix = np.ones((self.action_space_size, self.action_space_size))/ self.action_space_size
         self.transition_matrix = np.eye(self.action_space_size)
 
-        # NOTE: state_matrix also holds player's position as number 10 in the matrix.
-        # However, that should be removed in the future, but is left for rendering simplicity
         self.state_matrix = np.zeros((tot_row, tot_col))                          # Environmental Map of walls and goals
         self.position = [np.random.randint(tot_row), np.random.randint(tot_col)]  # Indexes of Player position
 
@@ -145,10 +143,10 @@ class GridWorld:
             row_string = ""
             for col in range(self.world_col):
 
-                # Draw
+                # Draw player
                 if self.position == [row, col]: row_string += u" \u25CB " # u" \u25CC "
 
-                # Draw player, walls, paths and goals
+                # Draw walls, paths and goals
                 else:
                     match self.state_matrix[row, col]:
                         # Wall
@@ -169,9 +167,6 @@ class GridWorld:
                         # Goal 4
                         case 4:
                             row_string += ' D '
-                        # Player
-                        case 10:
-                            row_string += u" \u25CB "  # u" \u25CC "
 
             row_string += '\n'
             graph += row_string
@@ -229,6 +224,7 @@ class GridWorld:
         if 0 <= new_position[0] < self.world_row:
             if 0 <= new_position[1] < self.world_col:
                 if not hit_wall:
+                    self.state_matrix[self.position[0], self.position[1]] = 0   # Could be replaced with new object to save the trace of trajectory
                     self.position = new_position
 
         # to deal with variable visibility
