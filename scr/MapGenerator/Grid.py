@@ -1,4 +1,4 @@
-from Cell import *
+from MapGenerator.Cell import *
 
 class Grid:
     """

@@ -1,4 +1,4 @@
-from Grid import *
+from MapGenerator.Grid import *
 import numpy as np
 import matplotlib.pyplot as plt
 

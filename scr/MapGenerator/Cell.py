@@ -1,4 +1,4 @@
-from Tile import *
+from MapGenerator.Tile import *
 
 class Cell:
     """
