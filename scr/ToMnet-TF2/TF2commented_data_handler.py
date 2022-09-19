@@ -354,6 +354,11 @@ class DataHandler(mp.ModelParameter):
             steps.append(np_tensor)
             output = np.array(steps)
 
+            ## NIKITA: This part adds zeroes 1x12x12x10 to make all games the same size
+            ## NIKITA: Maybe this part influence learning, as you learn NN on zeroes!
+            ## NIKITA: Should be considered to change this part!!!
+            ## START
+
             # pdb.set_trace()
             pad_size = int(self.MAX_TRAJECTORY_SIZE - output.shape[0])
 
@@ -369,6 +374,8 @@ class DataHandler(mp.ModelParameter):
                 for i in range(abs(pad_size)):
                     # remove the first step
                     output = np.delete(output, 0, axis=0)
+
+            ## END
 
         fp.close()
         return output, label

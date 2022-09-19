@@ -36,15 +36,15 @@ class NeuralNetLayers:
   def create_variables(self,name, shape, is_fc_layer, initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform")):
       regularizer = tf.keras.regularizers.l2(l=0.5 * (self.WEIGHT_DECAY))
       # pdb.set_trace()
-      tf.compat.v1.disable_resource_variables() ### Possible ERROR
+      # tf.compat.v1.disable_resource_variables() ### Possible ERROR
       new_variables = tf.compat.v1.get_variable(name, shape=shape, initializer=initializer, regularizer=regularizer, use_resource=False) ### Possible ERROR
       return new_variables
   
   def batch_normalization_layer(self, input_layer, dimension):
       mean, variance = tf.nn.moments(x=input_layer, axes=[0, 1, 2])
-      tf.compat.v1.disable_resource_variables() ### Possible ERROR
-      beta = tf.compat.v1.get_variable('beta', dimension, tf.float32, initializer=tf.compat.v1.keras.initializers.Constant(0.0, tf.float32), use_resource=False) ### Possible ERROR
-      gamma = tf.compat.v1.get_variable('gamma', dimension, tf.float32, initializer=tf.compat.v1.keras.initializers.Constant(1.0, tf.float32), use_resource=False) ### Possible ERROR
+      # tf.compat.v1.disable_resource_variables() ### Possible ERROR
+      beta = tf.compat.v1.get_variable('beta', dimension, tf.float32, initializer=tf.compat.v1.keras.initializers.Constant(0.0), use_resource=False) ### Possible ERROR
+      gamma = tf.compat.v1.get_variable('gamma', dimension, tf.float32, initializer=tf.compat.v1.keras.initializers.Constant(1.0), use_resource=False) ### Possible ERROR
       bn_layer = tf.nn.batch_normalization(input_layer, mean, variance, beta, gamma, self.BN_EPSILON)
   
       return bn_layer
@@ -256,7 +256,7 @@ class NeuralNetLayers:
       # cell:
       # the cell will be fed in to 
       # tf.nn.dynamic_rnn(cell=cell, inputs=lstm_input, sequence_length=seq_len, initial_state=initial_state, dtype=tf.float32, time_major=False)
-      cell = tf.compat.v1.nn.rnn_cell.LSTMCell(num_hidden, state_is_tuple=True)
+      cell = tf.compat.v1.nn.rnn_cell.LSTMCell(num_hidden, state_is_tuple=True) # tf.keras.layers.LSTMCell(num_hidden)
       
       if train:      
           # Using dropout for regularization during the RNN training
