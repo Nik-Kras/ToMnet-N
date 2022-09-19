@@ -167,7 +167,8 @@ class DataHandler(mp.ModelParameter):
         # --------------------------------------------------------------
         # pdb.set_trace()
         if not parse_query_state:
-          all_data = np.empty([self.MAX_TRAJECTORY_SIZE,self.MAZE_WIDTH,self.MAZE_HEIGHT,self.MAZE_DEPTH_TRAJECTORY])
+            #all_data_one_row = np.empty([len(files) * self.MAX_TRAJECTORY_SIZE,self.MAZE_WIDTH,self.MAZE_HEIGHT,self.MAZE_DEPTH_TRAJECTORY])
+            all_data = np.empty([self.MAX_TRAJECTORY_SIZE,self.MAZE_WIDTH,self.MAZE_HEIGHT,self.MAZE_DEPTH_TRAJECTORY])
         else:
           all_data = np.empty([self.MAZE_WIDTH,self.MAZE_HEIGHT,self.MAZE_DEPTH_QUERY_STATE])
 
@@ -224,14 +225,21 @@ class DataHandler(mp.ModelParameter):
         # data = (num_files, dim_1, dim_2, ...)
         # --------------------------------------------------------------
         if not parse_query_state:
-          all_data = all_data.reshape(num_files, self.MAX_TRAJECTORY_SIZE,
-                                      self.MAZE_WIDTH,self.MAZE_HEIGHT,
-                                      self.MAZE_DEPTH_TRAJECTORY)
+          # Because I removed zero padding in data loading I must add zero padding here
+          cutted_batch_num = int(all_data.shape[0] / 10)    # 1275 - > 127
+          all_data = all_data[: int(10*cutted_batch_num)]   # data[:1275] -> data[:1270] (dividable to 10)
+          all_data = all_data.reshape(cutted_batch_num,
+                                      self.MAX_TRAJECTORY_SIZE, self.MAZE_WIDTH,
+                                      self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY) # (1270, 12, 12, 11) -> (127, 10, 12, 12, 11)
+          # all_data = all_data.reshape(num_files,
+          #                             self.MAX_TRAJECTORY_SIZE, self.MAZE_WIDTH,
+          #                             self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY)
           # --------------------------------------------------------------
           # Only retain unique labels
           # test_labels = （total_steps, ） ->
           # test_labels = (num_files, )
           # --------------------------------------------------------------
+          all_labels = all_labels[: int(10*cutted_batch_num)]   # cut in the same manner as the data
           all_labels = all_labels[0:-1:self.MAX_TRAJECTORY_SIZE]
         else:
            all_data = all_data.reshape(num_files,
@@ -361,13 +369,14 @@ class DataHandler(mp.ModelParameter):
 
             # pdb.set_trace()
             pad_size = int(self.MAX_TRAJECTORY_SIZE - output.shape[0])
+            print("pad_size: ", pad_size)
 
             #Zeroes pre-padding to max length
             if pad_size > 0:
                 np_pad = np.zeros((self.MAZE_HEIGHT,self.MAZE_WIDTH,self.MAZE_DEPTH_TRAJECTORY), dtype=np.int8)
-                for i in range(pad_size):
-                    # insert the zero layer to the head
-                    output = np.insert(output, 0, np_pad, axis=0)
+                # for i in range(pad_size):
+                #     # insert the zero layer to the head
+                #     output = np.insert(output, 0, np_pad, axis=0)
 
             #Truncating trajectory to max length
             elif pad_size < 0:

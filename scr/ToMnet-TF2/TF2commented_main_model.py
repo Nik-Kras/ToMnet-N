@@ -810,6 +810,9 @@ class Model(mp.ModelParameter):
           if step % 10 == 0:
               print('%i batches finished!' %step)
           # pdb.set_trace()
+
+          if step * batch_size > data_traj.shape[0]:
+              break
           file_index = step * batch_size
 
           batch_data_traj, batch_labels_traj,\
@@ -1018,7 +1021,7 @@ if __name__ == "__main__":
     tf.compat.v1.reset_default_graph()
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, default='all', help='all: train and test, train: only train, test: only test')
-    parser.add_argument('--shuffle', type=str, default=False, help='shuffle the data for more random result')
+    parser.add_argument('--shuffle', type=str, default=True, help='shuffle the data for more random result')
     parser.add_argument('--subj_name',type = str,default=subj_name) # the subject name
     args = parser.parse_args()
     model = Model(args)

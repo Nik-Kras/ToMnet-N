@@ -237,8 +237,12 @@ class BatchGenerator:
       # choose a random set of files (could be not continuous)
       indexes_files = np.random.choice(num_files, batch_size)
     else:
-      # choose a continuous series of files 
-      indexes_files = range(file_index, file_index + batch_size)
+      # If-Else is needed to prevent going out of borders
+      # choose a continuous series of files
+      if file_index + batch_size < num_files:
+        indexes_files = range(file_index, file_index + batch_size)
+      else:
+        indexes_files = range(file_index - batch_size, file_index)
       
     
     # --------------------------------------------------------------    
