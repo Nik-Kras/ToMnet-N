@@ -20,11 +20,11 @@ import sys
 import argparse
 import numpy as np
 import pdb # For debugging
-import commented_charnet as cn
-import commented_prednet as pn
-import commented_data_handler as dh
-import commented_model_parameters as mp
-import commented_batch_generator as bg
+import TF2commented_charnet as cn
+import TF2commented_prednet as pn
+import TF2commented_data_handler as dh
+import TF2commented_model_parameters as mp
+import TF2commented_batch_generator as bg
 
 class Model(mp.ModelParameter):
   # --------------------------------------

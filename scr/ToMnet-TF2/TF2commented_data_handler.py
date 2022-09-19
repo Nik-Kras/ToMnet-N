@@ -18,7 +18,7 @@ from random import shuffle
 # from commented_utils import plot_trajectory # no longer needs it
 import re
 import pdb
-import commented_model_parameters as mp
+import TF2commented_model_parameters as mp
 
 
 class DataHandler(mp.ModelParameter):

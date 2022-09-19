@@ -17,7 +17,7 @@ ToMnet forms the character embedding echar,i as follows. We
 import tensorflow as tf
 #import numpy as np
 #from tensorflow.contrib import rnn
-import commented_nn_layers as nnl
+import TF2commented_nn_layers as nnl
 
 # For debugging
 import pdb
