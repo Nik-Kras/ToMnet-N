@@ -398,16 +398,6 @@ class Model(mp.ModelParameter):
       #Validate first?
       if step % self.REPORT_FREQ == 0:
 
-        # Comment the block for 'FULL_VALIDATION' as it will not be run anyways
-#        if self.FULL_VALIDATION:
-#          validation_loss_value, validation_error_value = self.full_validation(loss=self.vali_loss, top1_error=self.vali_top1_error, vali_data=vali_data, vali_labels=vali_labels, session=sess, batch_data=train_batch_data, batch_label=train_batch_labels)
-#
-#          vali_summ = tf.Summary()
-#          vali_summ.value.add(tag='full_validation_error', simple_value=validation_error_value.astype(np.float))
-#          summary_writer.add_summary(vali_summ, step)
-#          summary_writer.flush()
-#
-#        else:
         _, validation_error_value, validation_loss_value = sess.run([self.val_op, self.vali_top1_error, self.vali_loss],\
                                                                     {self.vali_data_traj_placeholder: vali_batch_data_traj,\
                                                                      self.vali_final_target_placeholder: vali_batch_labels_traj,\
@@ -526,8 +516,8 @@ class Model(mp.ModelParameter):
       #  self.INIT_LR = 0.1 * self.INIT_LR
       #  print('Learning rate decayed to ', self.INIT_LR)
 
-      # Save checkpoints every 10000 steps and also at the last step
-      if step % 10000 == 0 or (step + 1) == self.TRAIN_STEPS:
+      # Save checkpoints every TRAIN_STEPS (10000) steps and also at the last step
+      if step % self.TRAIN_STEPS == 0 or (step + 1) == self.TRAIN_STEPS:
           checkpoint_path = os.path.join(self.path_train, 'model.ckpt')
           saver.save(sess, checkpoint_path, global_step=step)
 
