@@ -49,7 +49,7 @@ class Model(mp.ModelParameter):
   SUBSET_SIZE = -1 # use all files
   # tota number of minibatches used for training
   # (Paper: 2M minibatches, A.3.1. EXPERIMENT 1: SINGLE PAST MDP)
-  TRAIN_STEPS = 300 # 10000 # 10,000 causes huge overtraining. After 300 steps validation loss rise
+  TRAIN_STEPS = 1000 # 10000 # 10,000 causes huge overtraining. After 300 steps validation loss rise
   REPORT_FREQ = 100 # the frequency of writing the error to error.csv
   #path_txt_data = os.getcwd() + '/S002a/'
   # TRUE: use the full data set for validation
@@ -726,8 +726,8 @@ class Model(mp.ModelParameter):
 
         #pdb.set_trace()
         for step in range(num_batches):
-          if step % 10 == 0:
-              print('%i batches finished!' %step)
+          # if step % 10 == 0:
+          #     print('%i batches finished!' %step)
           # pdb.set_trace()
           file_index = step * batch_size
 
@@ -807,13 +807,13 @@ class Model(mp.ModelParameter):
         # Test by batches
         #pdb.set_trace()
         for step in range(num_batches):
-          if step % 10 == 0:
-              print('%i batches finished!' %step)
+          # if step % 10 == 0:
+          #     print('%i batches finished!' %step)
           # pdb.set_trace()
 
-          if step * batch_size > data_traj.shape[0]:
-              break
           file_index = step * batch_size
+          if file_index > data_traj.shape[0]:
+              break
 
           batch_data_traj, batch_labels_traj,\
           batch_data_query_state, batch_labels_query_state\
