@@ -29,7 +29,7 @@ class NeuralNetLayers:
       
   def activation_summary(self,x):
       tensor_name = x.op.name
-      tf.compat.v1.enable_v2_behavior() ### Possible ERROR
+      # tf.compat.v1.enable_v2_behavior() ### Possible ERROR
       tf.compat.v1.summary.histogram(tensor_name + '/activations', x) ### Possible ERROR
       tf.compat.v1.summary.scalar(tensor_name + '/sparsity', tf.nn.zero_fraction(x)) ### Possible ERROR
   

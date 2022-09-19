@@ -26,6 +26,8 @@ import TF2commented_data_handler as dh
 import TF2commented_model_parameters as mp
 import TF2commented_batch_generator as bg
 
+tf.compat.v1.disable_eager_execution()
+
 class Model(mp.ModelParameter):
   # --------------------------------------
   # Constant block
@@ -49,7 +51,7 @@ class Model(mp.ModelParameter):
   SUBSET_SIZE = -1 # use all files
   # tota number of minibatches used for training
   # (Paper: 2M minibatches, A.3.1. EXPERIMENT 1: SINGLE PAST MDP)
-  TRAIN_STEPS = 10000
+  TRAIN_STEPS = 300 # 10000 # 10,000 causes huge overtraining. After 300 steps validation loss rise
   REPORT_FREQ = 100 # the frequency of writing the error to error.csv
   #path_txt_data = os.getcwd() + '/S002a/'
   # TRUE: use the full data set for validation
@@ -72,8 +74,7 @@ class Model(mp.ModelParameter):
   path_ckpt = os.path.join('test_on_simulation_data','training_result','caches')
   path_train = os.path.join('test_on_simulation_data','training_result','caches')
   #path_txt_data = os.path.join('..','..','data','data_simulation','S004b-S037b')
-  path_txt_data = os.path.join('..','..','data','data_simulation',\
-  'simulation_data_on_server','data','data_simulation','S004-S033','processed')
+  path_txt_data = os.path.join('..','..','data')
 
   # for human data
   #use panda df to store these values
