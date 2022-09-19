@@ -134,7 +134,7 @@ class DataHandler(mp.ModelParameter):
 
     def parse_subset(self, directory, files, parse_query_state, with_label = True):
         '''
-        This function wil parse all the files in the directoy and return
+        This function will parse all the files in the directoy and return
         the corresponding tensors and labels.
         Args:
           :param directory:
@@ -255,15 +255,15 @@ class DataHandler(mp.ModelParameter):
         label = ''
         with open(filename) as fp:
             lines = list(fp)
-            maze = lines[2:14]
+            maze = lines[2:self.MAZE_WIDTH+2]
 
             #Parse maze to 2d array, remove walls.
             i=0
-            while i < 12: # in the txt file, each maze has 12 lines
+            while i < self.MAZE_WIDTH: # in the txt file, each maze has self.MAZE_WIDTH (12) lines
                 maze[i]= list(maze[i])
-                maze[i].pop(0)
-                maze[i].pop(len(maze[i])-1)
-                maze[i].pop(len(maze[i])-1)
+                maze[i].pop(0)                  # Deletes first map row-element which should be a wall
+                maze[i].pop(len(maze[i])-1)     # Deletes last map row-element which should be '\n'
+                maze[i].pop(len(maze[i])-1)     # Deletes last map row-element which should be a wall
                 i+=1
 
             #Original maze (without walls)
@@ -275,29 +275,33 @@ class DataHandler(mp.ModelParameter):
             #Plane for agent's initial position
             np_agent = np.where(np_maze == 'S', 1, 0).astype(np.int8)
 
+            ### Create layers for Goal Map representation
             #Planes for each possible goal
             #targets = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m']
-            targets = ['C','D','E','F'] # for the simplified 4-targets mazes
+            targets = ['C','D','E','F'] # for the simplified 4-targets mazes ### NIKITA: THAT WILL BE CHANGED TO A, B, C, D
             np_targets = np.repeat(np_maze[:, :, np.newaxis], len(targets), axis=2)
             for target, i in zip(targets, range(len(targets))):
                 np_targets[:,:,i] = np.where(np_maze == target, 1, 0)
             # np_targets.shape = (12, 12, 4)
             np_targets = np_targets.astype(int)
 
+            ### Create Player Position Trajectory
             #Parse trajectory into 2d array
-            trajectory = lines[15:]
+            trajectory = lines[self.MAZE_WIDTH+3:]
             agent_locations = []
-            for i in trajectory:
-                i = i[1:len(i)-2]
-                tmp = i.split(",")
+            for tau in trajectory:
+                tau = tau[1:len(tau)-2]   # Remove '(output)\n' and leave only two coordinates separated by ,
+                tmp = tau.split(",")
                 try:
                     agent_locations.append([tmp[0],tmp[1]])
                 except:pass
+
+            ### Create Actions Trajectory
             possible_actions=['right', 'left', 'up', 'down', 'goal']
             for i in range(len(agent_locations) - 1):
 
                 #Create a 12x12sx4 tensor for each t(x,a)
-                np_actions = np.zeros((12,12,len(possible_actions)), dtype=np.int8)
+                np_actions = np.zeros((self.MAZE_WIDTH, self.MAZE_HEIGHT,len(possible_actions)), dtype=np.int8)
                 #Determine the type of action
                 if agent_locations[i][0] > agent_locations[i+1][0]:
                     layer = 'left'
@@ -319,7 +323,7 @@ class DataHandler(mp.ModelParameter):
                 output = np.array(steps)
 
             #The last tensor of every trajectory will be the position of the goal.
-            np_actions = np.zeros((12,12,len(possible_actions)), dtype=np.int8)
+            np_actions = np.zeros((self.MAZE_WIDTH, self.MAZE_HEIGHT, len(possible_actions)), dtype=np.int8)
             np_actions[int(agent_locations[-1][1])-1, int(agent_locations[-1][0])-1, possible_actions.index('goal')] = 1
 
             # For the last step:
