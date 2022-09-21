@@ -49,7 +49,7 @@ class Model(mp.ModelParameter):
   SUBSET_SIZE = -1 # use all files
   # tota number of minibatches used for training
   # (Paper: 2M minibatches, A.3.1. EXPERIMENT 1: SINGLE PAST MDP)
-  TRAIN_STEPS = 1000 # 10000 # 10,000 causes huge overtraining. After 300 steps validation loss rise
+  TRAIN_STEPS = 300 # 10000 # 10,000 causes huge overfitting. After 300 steps validation loss rise
   REPORT_FREQ = 100 # the frequency of writing the error to error.csv
   #path_txt_data = os.getcwd() + '/S002a/'
   # TRUE: use the full data set for validation
@@ -249,7 +249,7 @@ class Model(mp.ModelParameter):
     else:
       charnet = cn.CharNet()
       prednet = pn.PredNet()
-      length_e_char = length_e_char = self.LENGTH_E_CHAR
+      length_e_char = self.LENGTH_E_CHAR
 
 
       # model for training
@@ -376,6 +376,10 @@ class Model(mp.ModelParameter):
       # Generate batches for training data
       # --------------------------------------------------------------
       # pdb.set_trace()
+
+      ### NIKITA: Create My Own Batch Generator Algorithm without zero-padding and with no
+      ### Missposition of labels, and with sequenction of each game (no game must be interrupted)
+
       train_batch_data_traj, train_batch_labels_traj,\
       train_batch_data_query_state, train_batch_labels_query_state\
       = self.batch_generator.generate_train_batch(self.train_data_traj,\

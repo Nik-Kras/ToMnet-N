@@ -369,14 +369,14 @@ class DataHandler(mp.ModelParameter):
 
             # pdb.set_trace()
             pad_size = int(self.MAX_TRAJECTORY_SIZE - output.shape[0])
-            print("pad_size: ", pad_size)
+            # print("pad_size: ", pad_size)
 
             #Zeroes pre-padding to max length
             if pad_size > 0:
                 np_pad = np.zeros((self.MAZE_HEIGHT,self.MAZE_WIDTH,self.MAZE_DEPTH_TRAJECTORY), dtype=np.int8)
-                # for i in range(pad_size):
-                #     # insert the zero layer to the head
-                #     output = np.insert(output, 0, np_pad, axis=0)
+                for i in range(pad_size):
+                    # insert the zero layer to the head
+                    output = np.insert(output, 0, np_pad, axis=0)
 
             #Truncating trajectory to max length
             elif pad_size < 0:
