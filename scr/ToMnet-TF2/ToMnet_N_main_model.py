@@ -26,7 +26,7 @@ import ToMnet_N_PredNet as pn
 from keras import Model
 
 # --------------------------------------
-# ToMnet-N represents the model itself
+# ToMnet_N represents the model itself
 # --------------------------------------
 class ToMnet_N(Model):
 
@@ -42,7 +42,7 @@ class ToMnet_N(Model):
 
 
     def __init__(self):
-        super(ToMnet_N, self).__init__(name="ToMnet-N")
+        super(ToMnet_N, self).__init__(name="ToMnet_N")
 
         # Create the model
         self.char_net = cn.CharNet(input_tensor=self.TRAJECTORY_SHAPE,
@@ -75,7 +75,7 @@ class ToMnet_N(Model):
 
 # --------------------------------------
 # Handler keeps all parameters, manages learning, fitting
-# and all other operations with ToMnet-N
+# and all other operations with ToMnet_N
 # --------------------------------------
 class Handler_ToMnet_N():
   # --------------------------------------
@@ -185,7 +185,7 @@ class Handler_ToMnet_N():
                                         parse_query_state=True)
 
     # ----------------
-    # Create ToMnet-N
+    # Create ToMnet_N
     # ----------------
     self.ToMnet_N = ToMnet_N()
 
