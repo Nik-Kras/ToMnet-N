@@ -221,7 +221,7 @@ class GridWorld():
         for i in range(self.world_row):
             self.init_map[i] = '#'
             for j in range(self.world_col):
-                if self.state_matrix[self.WallMap][ i, j] == self.MapSym[self.WallMap]["Wall"]:
+                if self.state_matrix[self.WallMap][i, j] == self.MapSym[self.WallMap]["Wall"]:
                     self.init_map[i] = self.init_map[i] + '#'
                 elif self.state_matrix[self.PlayerMap][ i, j] == self.MapSym[self.PlayerMap]["Player"]:
                     self.init_map[i] = self.init_map[i] + 'O'
@@ -236,6 +236,7 @@ class GridWorld():
                 else:
                     self.init_map[i] = self.init_map[i] + '-'
             self.init_map[i] = self.init_map[i] + '#'
+        print("Initial Map:")
         print(self.init_map)
 
 

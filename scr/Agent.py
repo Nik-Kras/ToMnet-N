@@ -79,11 +79,11 @@ class AgentStar:
 
         return result_point
 
-    def chose_action(self):
-        if self.picked_goal:
+    def chose_action(self, observability="partial"):
+        if observability == "full" or self.picked_goal:
             self.goal_found = self.get_highest_goal_from_memory([])
 
-        result = self.astar()
+        result = self.astar(observability=observability)
 
         ignore_list = []
 
@@ -99,7 +99,7 @@ class AgentStar:
                     self.goal_found = self.env.ObjSym["Wall"]
 
                 ignore_list.append(self.goal_found)
-                result = self.astar()
+                result = self.astar(observability=observability)
 
         if self.env.goal_picked != 0:
             self.step_picked_goal.append(len(self.trajectory)-1)
@@ -111,13 +111,23 @@ class AgentStar:
         self.memory[self.env.position[0], self.env.position[1]] = self.env.ObjSym["Path"]
         self.picked_goal = True
 
-    def astar(self):
+    # Astar-like algorithm
+    def astar(self, observability="partial"):
         """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
         # Create start and end node
-        start_node = Node(None, position=self.position)
+        start_node = Node(None, position=tuple(self.position))
         start_node.g = start_node.h = start_node.f = 0
 
+        if observability == "full" and not (self.goal_found is None):
+            goal_row = goal_col = 0
+            for i in range(self.env.world_row):
+                for j in range(self.env.world_col):
+                    if self.memory[i, j] == self.goal_found:
+                        goal_row = i
+                        goal_col = j
+            goal_position = [goal_row, goal_col]
+            end_node = Node(None, position=tuple(goal_position))
         # Initialize both open and closed list
         open_list = []
         closed_list = []
@@ -130,7 +140,8 @@ class AgentStar:
         while len(open_list) > 0:
             # Get the current node
             current_node = heapq.heappop(open_list)
-            closed_list.append(current_node)
+            if not (current_node in closed_list):
+                closed_list.append(current_node)
 
             point_obj = self.memory[current_node.position[0], current_node.position[1]]
             # Found the unexplored cell or it's goal
@@ -183,8 +194,13 @@ class AgentStar:
 
                 # Create the f, g, and h values
                 child.g = current_node.g + 1
-                #new_node.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
-                child.h = 0
+
+                # Use ASTAR for path optimization
+                # For Full-observability
+                if observability == "full":
+                    child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
+                else:
+                    child.h = 0
                 child.f = child.g + child.h
 
                 # Child is already in the open list
@@ -271,7 +287,7 @@ class AgentStar:
         # Save the Game line by line
         new_file_path = os.path.join(gf, 'test' + str(new_name_number) + '.txt')
         realmap = self.render()
-        print(realmap)
+
         with open(new_file_path, 'w') as f:
             f.write('Maze:\n')
 

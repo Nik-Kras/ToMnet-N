@@ -8,25 +8,26 @@ SIGHT = 24
 
 env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS, consume_goals=1, shaffle=False)
 
-for i in range(1):
+for i in range(5):
 
-    # # Create a Map for test
-    # walls = np.ones((ROWS, COLS))
-    # # for i in range(ROWS):
-    # #     if i%2 == 0:
-    # #         walls[i, :] = 0
-    # env.setStateMatrix(walls, set="walls")
-    # env.setPosition()
+    # Create a Map for test
+    walls = np.ones((ROWS, COLS))
+    # for i in range(ROWS):
+    #     if i%2 == 0:
+    #         walls[i, :] = 0
+    env.setStateMatrix(walls, set="walls")
+    env.setPosition()
+    env.save_initial_map()
 
-    env.reset()
+    # env.reset()
 
-    agent = Agent.AgentStar(env, SIGHT,  observability="full")
+    agent = Agent.AgentStar(env, SIGHT, observability="full")
 
     while True:
         agent.update_world_observation()
         agent.render()
 
-        action = agent.chose_action()
+        action = agent.chose_action(observability="full")
         print(action)
 
         observe, terminate, goal_picked, reward = env.execute(action)
@@ -39,7 +40,4 @@ for i in range(1):
             print("Game result: ", reward)
             break
 
-        #input("Press the <Enter> key to continue...")
-
     agent.save_game()
-    env.render()
