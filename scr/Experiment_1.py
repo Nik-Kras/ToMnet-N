@@ -6,36 +6,40 @@ ROWS = 12
 COLS = 12
 SIGHT = 24
 
-env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS)
+env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS, consume_goals=1, shaffle=False)
 
-# Create a Map for test
-walls = np.ones((ROWS, COLS))
-# for i in range(ROWS):
-#     if i%2 == 0:
-#         walls[i, :] = 0
-env.setStateMatrix(walls, set="walls")
-env.setPosition()
-env.render()
+for i in range(1):
 
-agent = Agent.AgentRL(env, SIGHT, observability="full")
+    # # Create a Map for test
+    # walls = np.ones((ROWS, COLS))
+    # # for i in range(ROWS):
+    # #     if i%2 == 0:
+    # #         walls[i, :] = 0
+    # env.setStateMatrix(walls, set="walls")
+    # env.setPosition()
 
-while True:
-    agent.update_world_observation()
-    agent.render()
+    env.reset()
 
-    action = agent.chose_action()
-    print(action)
+    agent = Agent.AgentStar(env, SIGHT,  observability="full")
 
-    observe, terminate, goal_picked, reward = env.execute(action)
+    while True:
+        agent.update_world_observation()
+        agent.render()
 
-    if goal_picked:
-        print("You have picked a goal, reward = {}".format(reward))
-        agent.on_pickup(reward)
+        action = agent.chose_action()
+        print(action)
 
-    if terminate:
-        print("Game result: ", reward)
-        break
+        observe, terminate, goal_picked, reward = env.execute(action)
 
-    #input("Press the <Enter> key to continue...")
+        if goal_picked:
+            print("You have picked a goal, reward = {}".format(reward))
+            agent.on_pickup(reward)
 
-env.render()
+        if terminate:
+            print("Game result: ", reward)
+            break
+
+        #input("Press the <Enter> key to continue...")
+
+    agent.save_game()
+    env.render()

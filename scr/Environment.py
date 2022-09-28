@@ -67,7 +67,9 @@ PS: New Map:
 
 class GridWorld():
 
-    def __init__(self, tot_row, tot_col, goal_rewards=None, step_cost=-0.001, max_moves_per_episode=90):
+    def __init__(self, tot_row, tot_col, goal_rewards=None,
+                 step_cost=-0.001, max_moves_per_episode=90,
+                 consume_goals=2, shaffle=True):
         super().__init__()
         self.action_space_size = 4
         self.world_row = tot_row
@@ -138,6 +140,8 @@ class GridWorld():
             goal_rewards = [2, 4, 8, 16]
         self.goal_rewards = goal_rewards
 
+        self.shaffle = shaffle
+        self.consume_goals = consume_goals
         self.cnt_goal_picked = 0
         self.goal_picked = False
 
@@ -272,7 +276,7 @@ class GridWorld():
         # By default, everything is okay
         # If one of "bad" circumstances happens - it changes to True
         terminate = False
-        goal_picked = None
+        goal_picked = 0
 
         # If player made more than max_moves (90) steps - terminate the game
         if self.step_count > self.max_moves: return [True, goal_picked]
@@ -296,7 +300,7 @@ class GridWorld():
 
         # Check if player picked a goal
         if   self.state_matrix[self.GoalMap][new_position[0], new_position[1]] == self.MapSym[self.GoalMap]["Other"]:
-            goal_picked = False  # Path
+            goal_picked = 0  # Path
         elif self.state_matrix[self.GoalMap][new_position[0], new_position[1]] == self.MapSym[self.GoalMap]["Goal A"]:
             goal_picked = self.MapSym[self.GoalMap]["Goal A"]
             self.consumed_goal = self.consumed_goal + "A"
@@ -384,13 +388,16 @@ class GridWorld():
         # terminate = False # There is a new condition to terminate a game - pick two goals!
 
         # When the goal is picked - shaffle other goals
-        if goal_picked and self.cnt_goal_picked == 0:
-            # Delete picked goal
-            self.delete_picked_goal()
-            # Shaffle rest goals
-            self.shaffle_goals()
+        if goal_picked != 0 and self.cnt_goal_picked == 0:
             self.cnt_goal_picked += 1
-        elif goal_picked and self.cnt_goal_picked == 1:
+
+            if self.shaffle:
+                # Delete picked goal
+                self.delete_picked_goal()
+                # Shaffle rest goals
+                self.shaffle_goals()
+
+        if goal_picked and self.cnt_goal_picked == self.consume_goals:
             terminate = True
         # if terminate: print("Episode is finished. Moves played: ", self.step_count, "Goal picked? ", goal_picked)
         return observe, terminate, goal_picked, reward

@@ -33,9 +33,10 @@ class Node:
     def __gt__(self, other):
         return self.f > other.f
 
-class AgentRL:
-    def __init__(self, env: Environment, sight, observability="partial"):
+class AgentStar:
+    def __init__(self, env: Environment, sight, observability="partial", consume_goals=2):
         self.env = env
+        self.consume_goals = consume_goals
         self.observability = observability
         if self.observability == "partial": self.sight = min(sight, self.env.world_col)
         else: self.sight = None
@@ -245,14 +246,14 @@ class AgentRL:
         A function saves a game: Maze (walls, goals, player), 
         Consumed Goal, Length of trajectory and each trajectory step to .txt file
     """
-    def save_game(self):
+    def save_game(self, name="TestFolder"):
 
         # Shouldn't be here, but it fixes the save of last goal :(
         if self.env.goal_picked != 0:
             self.step_picked_goal.append(len(self.trajectory)-1)
 
         # Get the path to folder
-        gf = os.path.join('..', 'data', 'Saved Games') # path to games folder
+        gf = os.path.join('..', 'data', 'Saved Games', name) # path to games folder
         files = os.listdir(gf)
         r = re.compile(".*.txt")
         files = list(filter(r.match, files))
@@ -280,8 +281,8 @@ class AgentRL:
             for i in range(self.env.world_row):
                 f.write(self.env.init_map[i] + '\n')
             f.write(wall_line + '\n')
-            f.write('Goal Consumed #1: '+ self.env.consumed_goal[0] +'\n')
-            f.write('Goal Consumed #2: ' + self.env.consumed_goal[1] + '\n')
+            for i, goal in enumerate(self.env.consumed_goal):
+                f.write('Goal Consumed #' + str(i) + ' : '+ goal +'\n')
             f.write('Trajectory length: ' + str(len(self.trajectory)) + '\n')
 
             # Save moves
