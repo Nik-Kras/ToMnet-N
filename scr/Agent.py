@@ -34,9 +34,11 @@ class Node:
         return self.f > other.f
 
 class AgentRL:
-    def __init__(self, env: Environment, sight):
-        self.sight = sight
+    def __init__(self, env: Environment, sight, observability="partial"):
         self.env = env
+        self.observability = observability
+        if self.observability == "partial": self.sight = min(sight, self.env.world_col)
+        else: self.sight = None
         self.position = env.position
         self.memory = np.full((env.world_row, env.world_col), None)
         self.trajectory = []
@@ -196,18 +198,22 @@ class AgentRL:
 
 
     def update_world_observation(self):
-        position, sight_array = self.env.get_sight(self.sight)
+        position, sight_array = self.env.get_sight(self.sight, self.observability)
         self.position = position
 
-        half_sight = int(self.sight * 0.5)
-        for i in range(self.sight):
-            for j in range(self.sight):
-                x = i + position[0] - half_sight
-                y = j + position[1] - half_sight
+        if self.observability == "full":
+            self.memory = sight_array
+        else:
 
-                sight_elem = sight_array[i, j]
-                if -1 < x < self.env.world_row and -1 < y < self.env.world_col and sight_elem is not None:
-                    self.memory[x, y] = sight_elem
+            half_sight = int(self.sight * 0.5)
+            for i in range(self.sight):
+                for j in range(self.sight):
+                    x = i + position[0] - half_sight
+                    y = j + position[1] - half_sight
+
+                    sight_elem = sight_array[i, j]
+                    if -1 < x < self.env.world_row and -1 < y < self.env.world_col and sight_elem is not None:
+                        self.memory[x, y] = sight_elem
 
     def render(self):
         # 2. Draw a Map

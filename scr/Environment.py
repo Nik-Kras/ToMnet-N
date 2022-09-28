@@ -217,17 +217,17 @@ class GridWorld():
         for i in range(self.world_row):
             self.init_map[i] = '#'
             for j in range(self.world_col):
-                if self.state_matrix[self.WallMap, i, j] == self.MapSym[self.WallMap]["Wall"]:
+                if self.state_matrix[self.WallMap][ i, j] == self.MapSym[self.WallMap]["Wall"]:
                     self.init_map[i] = self.init_map[i] + '#'
-                elif self.state_matrix[self.PlayerMap, i, j] == self.MapSym[self.PlayerMap]["Player"]:
+                elif self.state_matrix[self.PlayerMap][ i, j] == self.MapSym[self.PlayerMap]["Player"]:
                     self.init_map[i] = self.init_map[i] + 'O'
-                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal A"]:
+                elif self.state_matrix[self.GoalMap][ i, j] == self.MapSym[self.GoalMap]["Goal A"]:
                     self.init_map[i] = self.init_map[i] + 'A'
-                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal B"]:
+                elif self.state_matrix[self.GoalMap][ i, j] == self.MapSym[self.GoalMap]["Goal B"]:
                     self.init_map[i] = self.init_map[i] + 'B'
-                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal C"]:
+                elif self.state_matrix[self.GoalMap][ i, j] == self.MapSym[self.GoalMap]["Goal C"]:
                     self.init_map[i] = self.init_map[i] + 'C'
-                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal D"]:
+                elif self.state_matrix[self.GoalMap][ i, j] == self.MapSym[self.GoalMap]["Goal D"]:
                     self.init_map[i] = self.init_map[i] + 'D'
                 else:
                     self.init_map[i] = self.init_map[i] + '-'
@@ -235,7 +235,7 @@ class GridWorld():
         print(self.init_map)
 
 
-    def get_sight(self, sight):
+    def get_sight(self, sight, observability="partial"):
         simple_map = np.ones((self.world_row, self.world_col), dtype=np.int16)  # 0-wall, 1-path. Start with all path, then add walls, then add goals
 
         # Put walls
@@ -250,6 +250,9 @@ class GridWorld():
                 elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal B"]: simple_map[row, col] = self.ObjSym["Goal B"]
                 elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal C"]: simple_map[row, col] = self.ObjSym["Goal C"]
                 elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal D"]: simple_map[row, col] = self.ObjSym["Goal D"]
+
+        if observability == "full":
+            return self.position, simple_map
 
         result = np.full((sight, sight), None)
 
@@ -536,7 +539,7 @@ class GridWorld():
                 randomCol = np.random.randint(self.world_col)
                 no_walls = self.state_matrix[self.WallMap][randomRow, randomCol] != self.MapSym[self.WallMap]["Wall"]
                 no_goals = goal_map[randomRow, randomCol] == self.MapSym[self.GoalMap]["Other"]
-                no_player = self.state_matrix[self.PlayerMap, randomRow, randomCol] == self.MapSym[self.PlayerMap]["Other"]
+                no_player = self.state_matrix[self.PlayerMap][randomRow, randomCol] == self.MapSym[self.PlayerMap]["Other"]
                 if no_walls and no_goals and no_player:
                     break
 

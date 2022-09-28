@@ -4,7 +4,7 @@ import numpy as np
 
 ROWS = 12
 COLS = 12
-SIGHT = 3
+SIGHT = 24
 
 env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS)
 
@@ -17,7 +17,7 @@ env.setStateMatrix(walls, set="walls")
 env.setPosition()
 env.render()
 
-agent = Agent.AgentRL(env, SIGHT)
+agent = Agent.AgentRL(env, SIGHT, observability="full")
 
 while True:
     agent.update_world_observation()
