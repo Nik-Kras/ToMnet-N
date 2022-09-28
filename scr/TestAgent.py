@@ -7,7 +7,6 @@ COLS = 12
 SIGHT = 3
 
 env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS)
-env.reset()
 
 # Create a Map for test
 # walls = np.ones((ROWS, COLS))
@@ -18,25 +17,29 @@ env.reset()
 # env.setPosition()
 # env.render()
 
-agent = Agent.AgentRL(env, SIGHT)
+for i in range(1):
+    env.reset()
+    env.render()
+    agent = Agent.AgentRL(env, SIGHT)
 
-while True:
-    agent.update_world_observation()
-    agent.render()
+    while True:
+        agent.update_world_observation()
+        agent.render()
 
-    action = agent.chose_action()
-    print(action)
+        action = agent.chose_action()
+        print(action)
 
-    observe, terminate, goal_picked, reward = env.execute(action)
+        observe, terminate, goal_picked, reward = env.execute(action)
 
-    if goal_picked:
-        print("You have picked a goal, reward = {}".format(reward))
-        agent.on_pickup(reward)
+        if goal_picked:
+            print("You have picked a goal, reward = {}".format(reward))
+            agent.on_pickup(reward)
 
-    if terminate:
-        print("Game result: ", reward)
-        break
+        if terminate:
+            print("Game result: ", reward)
+            break
 
-    #input("Press the <Enter> key to continue...")
+        #input("Press the <Enter> key to continue...")
 
-env.render()
+    agent.save_game()
+    env.render()

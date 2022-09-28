@@ -126,6 +126,9 @@ class GridWorld():
         self.state_matrix = [np.zeros((self.world_row, self.world_col), dtype=np.float16),
                              np.zeros((self.world_row, self.world_col), dtype=np.float16),
                              np.zeros((self.world_row, self.world_col), dtype=np.float16)]             # Environmental Map of walls and goals
+        self.init_map = [" "] * self.world_row                          # Needed to save game
+        self.consumed_goal = ""      # Needed to save game
+
         self.position = [np.random.randint(self.world_row), np.random.randint(self.world_col)]  # Indexes of Player position
 
         # Set the reward for each goal A, B, C, D.
@@ -136,6 +139,7 @@ class GridWorld():
         self.goal_rewards = goal_rewards
 
         self.cnt_goal_picked = 0
+        self.goal_picked = False
 
         # Set step cost in the environment
         # It could differ from experiment to experiment,
@@ -198,12 +202,38 @@ class GridWorld():
         # Clear step counter in the game
         self.step_count = 0
 
+        # Set the initial map (for game saving)
+        self.save_initial_map()
+
         dict_map = {"Player": np.expand_dims(self.state_matrix[self.PlayerMap], axis=0),
                     "Walls":  np.expand_dims(self.state_matrix[self.WallMap], axis=0),
                     "Goals":  np.expand_dims(self.state_matrix[self.GoalMap], axis=0)}
 
         # In the future, it should output Observed map (7x7), not "self.state_matrix"
         return dict_map
+
+    def save_initial_map(self):
+
+        for i in range(self.world_row):
+            self.init_map[i] = '#'
+            for j in range(self.world_col):
+                if self.state_matrix[self.WallMap, i, j] == self.MapSym[self.WallMap]["Wall"]:
+                    self.init_map[i] = self.init_map[i] + '#'
+                elif self.state_matrix[self.PlayerMap, i, j] == self.MapSym[self.PlayerMap]["Player"]:
+                    self.init_map[i] = self.init_map[i] + 'O'
+                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal A"]:
+                    self.init_map[i] = self.init_map[i] + 'A'
+                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal B"]:
+                    self.init_map[i] = self.init_map[i] + 'B'
+                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal C"]:
+                    self.init_map[i] = self.init_map[i] + 'C'
+                elif self.state_matrix[self.GoalMap, i, j] == self.MapSym[self.GoalMap]["Goal D"]:
+                    self.init_map[i] = self.init_map[i] + 'D'
+                else:
+                    self.init_map[i] = self.init_map[i] + '-'
+            self.init_map[i] = self.init_map[i] + '#'
+        print(self.init_map)
+
 
     def get_sight(self, sight):
         simple_map = np.ones((self.world_row, self.world_col), dtype=np.int16)  # 0-wall, 1-path. Start with all path, then add walls, then add goals
@@ -266,17 +296,22 @@ class GridWorld():
             goal_picked = False  # Path
         elif self.state_matrix[self.GoalMap][new_position[0], new_position[1]] == self.MapSym[self.GoalMap]["Goal A"]:
             goal_picked = self.MapSym[self.GoalMap]["Goal A"]
+            self.consumed_goal = self.consumed_goal + "A"
             # terminate   = True # Picking two goals changes behaviour of terminate
         elif self.state_matrix[self.GoalMap][new_position[0], new_position[1]] == self.MapSym[self.GoalMap]["Goal B"]:
             goal_picked = self.MapSym[self.GoalMap]["Goal B"]
+            self.consumed_goal = self.consumed_goal + "B"
             # terminate   = True # Picking two goals changes behaviour of terminate
         elif self.state_matrix[self.GoalMap][new_position[0], new_position[1]] == self.MapSym[self.GoalMap]["Goal C"]:
             goal_picked = self.MapSym[self.GoalMap]["Goal C"]
+            self.consumed_goal = self.consumed_goal + "C"
             # terminate   = True # Picking two goals changes behaviour of terminate
         elif self.state_matrix[self.GoalMap][new_position[0], new_position[1]] == self.MapSym[self.GoalMap]["Goal D"]:
             goal_picked = self.MapSym[self.GoalMap]["Goal D"]
+            self.consumed_goal = self.consumed_goal + "D"
             # terminate   = True # Picking two goals changes behaviour of terminate
 
+        self.goal_picked = goal_picked
         return [terminate, goal_picked]
 
     def check_reward(self, action, terminate, goal_picked):
@@ -349,17 +384,12 @@ class GridWorld():
         if goal_picked and self.cnt_goal_picked == 0:
             # Delete picked goal
             self.delete_picked_goal()
-
             # Shaffle rest goals
             self.shaffle_goals()
-
             self.cnt_goal_picked += 1
-
         elif goal_picked and self.cnt_goal_picked == 1:
             terminate = True
-
         # if terminate: print("Episode is finished. Moves played: ", self.step_count, "Goal picked? ", goal_picked)
-
         return observe, terminate, goal_picked, reward
 
     """
@@ -506,7 +536,8 @@ class GridWorld():
                 randomCol = np.random.randint(self.world_col)
                 no_walls = self.state_matrix[self.WallMap][randomRow, randomCol] != self.MapSym[self.WallMap]["Wall"]
                 no_goals = goal_map[randomRow, randomCol] == self.MapSym[self.GoalMap]["Other"]
-                if no_walls and no_goals:
+                no_player = self.state_matrix[self.PlayerMap, randomRow, randomCol] == self.MapSym[self.PlayerMap]["Other"]
+                if no_walls and no_goals and no_player:
                     break
 
                 # To prevent unsolvable maps (i.e. all walls)
