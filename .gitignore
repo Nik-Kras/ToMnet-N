@@ -132,3 +132,5 @@ dmypy.json
 
 ./scr/ToMnet-TF2/test_on_human_data
 ./scr/ToMnet-TF2/test_on_simulation_data
+
+save_model/
