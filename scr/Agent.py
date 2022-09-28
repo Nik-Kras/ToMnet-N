@@ -1,6 +1,8 @@
 import numpy as np
 import Environment
 import heapq
+import re
+import os
 
 adjacent_squares = ((0, -1), (0, 1), (-1, 0), (1, 0),)
 
@@ -37,6 +39,9 @@ class AgentRL:
         self.env = env
         self.position = env.position
         self.memory = np.full((env.world_row, env.world_col), None)
+        self.trajectory = []
+        self.position_trajectory = []
+        self.step_picked_goal = []
         self.picked_list = []
         self.goal_found = None
         self.max_goal = self.get_highest_goal(self.picked_list)
@@ -93,6 +98,10 @@ class AgentRL:
                 ignore_list.append(self.goal_found)
                 result = self.astar()
 
+        if self.env.goal_picked != 0:
+            self.step_picked_goal.append(len(self.trajectory)-1)
+        self.position_trajectory.append(self.position)
+        self.trajectory.append(result)
         return result
 
     def on_pickup(self, reward):
@@ -224,3 +233,62 @@ class AgentRL:
             row_string += '\n'
             graph += row_string
         print(graph)
+        return graph
+
+    """
+        A function saves a game: Maze (walls, goals, player), 
+        Consumed Goal, Length of trajectory and each trajectory step to .txt file
+    """
+    def save_game(self):
+
+        # Shouldn't be here, but it fixes the save of last goal :(
+        if self.env.goal_picked != 0:
+            self.step_picked_goal.append(len(self.trajectory)-1)
+
+        # Get the path to folder
+        gf = os.path.join('..', 'data', 'Saved Games') # path to games folder
+        files = os.listdir(gf)
+        r = re.compile(".*.txt")
+        files = list(filter(r.match, files))
+
+        # Chose the number for the new name
+        print("There are files in the folder: ", files)
+        max_number = 0
+        for file in files:
+            if max_number < int(file[4:-4]):
+                max_number = int(file[4:-4])
+
+        print("The max current number is: ", max_number)
+        new_name_number = max_number+1
+
+        # Save the Game line by line
+        new_file_path = os.path.join(gf, 'test' + str(new_name_number) + '.txt')
+        realmap = self.render()
+        print(realmap)
+        with open(new_file_path, 'w') as f:
+            f.write('Maze:\n')
+
+            # Save the Maze (Walls, Goals, Player)
+            wall_line = '#' * (self.env.world_col+2)
+            f.write(wall_line + '\n')
+            for i in range(self.env.world_row):
+                f.write(self.env.init_map[i] + '\n')
+            f.write(wall_line + '\n')
+            f.write('Goal Consumed #1: '+ self.env.consumed_goal[0] +'\n')
+            f.write('Goal Consumed #2: ' + self.env.consumed_goal[1] + '\n')
+            f.write('Trajectory length: ' + str(len(self.trajectory)) + '\n')
+
+            # Save moves
+            for i in range(len(self.trajectory)):
+                msg = str(self.position_trajectory[i]) + ' : ' + str(self.trajectory[i]) + ' : '
+                picked_bool = False
+                for j in range(len(self.step_picked_goal)):
+                    if self.step_picked_goal[j] == i:
+                        msg = msg + self.env.consumed_goal[j]  # If consumed First goal here - mention which
+                        picked_bool = True
+                if not picked_bool:
+                    msg = msg + "X"                         # If didn't consume - put X
+                f.write(msg + '\n')
+
+            f.close()
+
