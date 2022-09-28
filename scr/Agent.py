@@ -298,7 +298,7 @@ class AgentStar:
                 f.write(self.env.init_map[i] + '\n')
             f.write(wall_line + '\n')
             for i, goal in enumerate(self.env.consumed_goal):
-                f.write('Goal Consumed #' + str(i) + ' : '+ goal +'\n')
+                f.write('Goal Consumed #' + str(i+1) + ' : '+ goal +'\n')
             f.write('Trajectory length: ' + str(len(self.trajectory)) + '\n')
 
             # Save moves

@@ -6,10 +6,9 @@ ROWS = 12
 COLS = 12
 SIGHT = 24
 
-env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS, consume_goals=1, shaffle=False)
+for i in range(1000):
 
-for i in range(5):
-
+    env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS, consume_goals=1, shaffle=False)
     # Create a Map for test
     walls = np.ones((ROWS, COLS))
     # for i in range(ROWS):
