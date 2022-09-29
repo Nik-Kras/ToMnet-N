@@ -39,4 +39,4 @@ for i in range(1000):
             print("Game result: ", reward)
             break
 
-    agent.save_game()
+    agent.save_game(name="Experiment 1")

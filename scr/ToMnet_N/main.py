@@ -20,7 +20,7 @@ import argparse
 import numpy as np
 
 from TF2commented_batch_generator import BatchGenerator as bg
-from TF2commented_data_handler import DataHandler as dh
+from DataLoader import DataHandler as dh
 from ToMnet import ToMnet
 
 
