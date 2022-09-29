@@ -19,7 +19,6 @@ import os
 import sys
 import numpy as np
 from random import shuffle
-# from commented_utils import plot_trajectory # no longer needs it
 import re
 
 
@@ -56,9 +55,9 @@ class DataHandler:
         actions = [] # np.empty(1)
         labels = [] # np.empty(1)
 
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
         # Parse file one by one
-        # --------------------------------------------------------------
+        # ------------------------------------------------------------------
         j = 0  # for tracking progress (%)
         for i, file in enumerate(files):
 
@@ -70,16 +69,58 @@ class DataHandler:
             actions.append(act)
             labels.append(goal)
 
-            # trajectories = np.vstack((trajectories, traj))
-            # actions = np.vstack((actions, act))
-            # labels = np.vstack((labels, goal))
+            # Keep track on progress
+            if i >= np.ceil(j * Nfiles / 100)-1:
+                print('Parsed ' + str(j) + '%')
+                j += 10
+        print("----")
+
+        # ------------------------------------------------------------------
+        # Prepare data from games. -> Make many trajectories for each game
+        # ------------------------------------------------------------------
+        print("Augment data. One game creates many training samples!")
+
+        data_trajectories = data_current_state = data_actions = data_labels = []
+        j = 0  # for tracking progress (%)
+
+        # Process Game-per-Game
+        for i in range(Nfiles):
+
+            # Prepare data from one game
+            data_trajectories1, data_current_state1, \
+            data_actions1, data_labels1 = self.generate_data_from_game(trajectories=trajectories[i],
+                                                                        actions=actions[i],
+                                                                        labels=labels[i])
+            # Append to a single structure
+            data_trajectories.append(data_trajectories1)
+            data_current_state.append(data_current_state1)
+            data_actions.append(data_actions1)
+            data_labels.append(data_labels1)
 
             # Keep track on progress
-            if i >= np.ceil(j * Nfiles / 100):
-                print('Parsed ' + str(j) + '%')
+            if i >= np.ceil(j * Nfiles / 100)-1:
+                print('Augmented data ' + str(j) + '%')
                 j += 10
 
         print("----")
+
+        # ------------------------------------------------------------------
+        # Split the data  to Train / Test / Valid
+        # ------------------------------------------------------------------
+        print("Create training/testing/validation sets")
+
+        train_traj, test_traj, valid_traj, \
+        train_goal, test_goal, valid_goal, \
+        train_act, test_act, valid_act = self.split_and_shaffle(data_trajectories=data_trajectories,
+                                                                  data_current_state=data_current_state,
+                                                                  data_actions=data_actions,
+                                                                  data_labels=data_labels)
+
+        print("----")
+
+        return train_traj, test_traj, valid_traj, \
+               train_goal, test_goal, valid_goal, \
+               train_act,  test_act,  valid_act
 
     # Returns trajectory, actions and consumed goal
     # For a single game
@@ -95,7 +136,7 @@ class DataHandler:
         act  = np.empty(1, dtype=np.int8)
         goal = np.empty(1, dtype=np.int8)
 
-        # output.shape(100, 12, 12, 10) where 100 is Max Trajectory Size, 12x12 is WidthxHeight and 10 is Depth (1walls + 1player +4actions + 4goals)
+        # output.shape(100, 12, 12, 10) where 100 is Max Trajectory Size, 12x12 is WidthxHeight and 10 is Depth (1walls + 1player + 4goals + 4actions)
         output = np.zeros((self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY, self.MAX_TRAJECTORY_SIZE))
         label = ''
         steps = []
@@ -163,7 +204,7 @@ class DataHandler:
                 a = act[i]
                 np_actions[int(row), int(col), a] = 1
 
-                np_tensor = np.dstack((np_obstacles, np_agent, np_targets, np_actions))
+                np_tensor = np.dstack((np_obstacles, np_agent, np_targets, np_actions)) # (1walls + 1player + 4goals + 4actions)
                 steps.append(np_tensor)
                 traj = np.array(steps)
 
@@ -187,8 +228,45 @@ class DataHandler:
     # It deconstructs each game to a series of samples.
     # Single trajectory becomes a sequence of rising trajectories with same
     # Consumed goals
-    def make_samples(self):
-        print("make_samples")
+    def generate_data_from_game(self, trajectories, actions, labels):
+
+        # Make full data from a game
+        data_trajectories = []
+        data_current_state = []
+        data_actions = []
+        data_labels = []
+
+        MIN_ACTIONS = 5
+        for i in range(MIN_ACTIONS, trajectories.shape[0]):
+            data_trajectories.append(trajectories[0:i,...])     # Trajectory to the state
+            data_current_state.append(trajectories[i,..., 0:2]) # Current state # (1walls + 1player + 4goals)
+            data_actions.append(actions[i,...])                 # Next Action
+            data_labels.append(labels[i,...])                   # Consumed Goal
+
+        return data_trajectories, data_current_state, data_actions, data_labels
+
+    def split_and_shaffle(self, data_trajectories, data_current_state, data_actions, data_labels):
+
+        N_Total = len(data_trajectories)
+        N_train = int(np.ceil(N_Total * 0.65))
+        N_test  = int(np.ceil(N_Total * 0.20))
+        N_valid = int(np.ceil(N_Total * 0.15))
+
+        total_indexes = list(range(N_Total))
+        shuffle(total_indexes)
+
+        train_indexes = total_indexes[0:N_train]
+        test_indexes  = total_indexes[N_train:N_train+N_test]
+        valid_indexes = total_indexes[N_train+N_test:]
+
+        train_traj = [data_trajectories[i] for i in train_indexes]
+        test_traj = [data_trajectories[i] for i in test_indexes]
+        valid_traj = [data_trajectories[i] for i in valid_indexes]
+
+
+        return train_traj, test_traj, valid_traj, \
+               train_goal, test_goal, valid_goal, \
+               train_act, test_act, valid_act
 
     def parse_whole_data_set(self, directory, mode, shuf, subset_size = -1, parse_query_state = False):
         '''
