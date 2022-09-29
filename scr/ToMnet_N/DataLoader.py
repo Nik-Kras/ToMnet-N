@@ -69,7 +69,7 @@ class DataHandler:
             labels.append(goal)
 
             # Keep track on progress
-            if i >= np.ceil(j * Nfiles / 100)-1:
+            if i >= int(np.ceil(j * Nfiles / 100))-1:
                 print('Parsed ' + str(j) + '%')
                 j += 10
         print("----")
@@ -102,7 +102,7 @@ class DataHandler:
             data_labels.append(data_labels1)
 
             # Keep track on progress
-            if i >= np.ceil(j * Nfiles / 100)-1:
+            if i >= int(np.ceil(j * Nfiles / 100))-1:
                 print('Augmented data ' + str(j) + '%')
                 j += 10
 
@@ -262,6 +262,11 @@ class DataHandler:
         N_test  = int(np.ceil(N_Total * 0.20))
         N_valid = int(np.ceil(N_Total * 0.15))
 
+        print("Total number of games after filtration: ", N_Total)
+        print("Games for training: ", N_train)
+        print("Games for testing: ", N_test)
+        print("Games for validation: ", N_valid)
+
         total_indexes = list(range(N_Total))
         shuffle(total_indexes)
 
@@ -301,6 +306,10 @@ class DataHandler:
         train_act = sum(train_act, [])
         test_act = sum(test_act, [])
         valid_act = sum(valid_act, [])
+
+        print("Time Steps for training: ", len(train_act))
+        print("Time Steps for testing: ", len(test_act))
+        print("Time Steps for validation: ", len(valid_act))
 
         return train_traj, test_traj, valid_traj, \
                train_current, test_current, valid_current, \
