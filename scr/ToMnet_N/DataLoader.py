@@ -21,7 +21,6 @@ import numpy as np
 from random import shuffle
 import re
 
-
 class DataHandler:
 
     def __init__(self, ts, w, h, d):
@@ -80,17 +79,22 @@ class DataHandler:
         # ------------------------------------------------------------------
         print("Augment data. One game creates many training samples!")
 
-        data_trajectories = data_current_state = data_actions = data_labels = []
+        data_trajectories = []
+        data_current_state = []
+        data_actions = []
+        data_labels = []
         j = 0  # for tracking progress (%)
 
         # Process Game-per-Game
         for i in range(Nfiles):
 
+            # Consider only games with more than 6 moves
+            if trajectories[i].shape[0] < 6:
+                continue
+
             # Prepare data from one game
-            data_trajectories1, data_current_state1, \
-            data_actions1, data_labels1 = self.generate_data_from_game(trajectories=trajectories[i],
-                                                                        actions=actions[i],
-                                                                        labels=labels[i])
+            data_trajectories1, data_current_state1, data_actions1, data_labels1 = self.generate_data_from_game(trajectories=trajectories[i],                                                                                                 actions=actions[i],
+                                                                                                                labels=labels[i])
             # Append to a single structure
             data_trajectories.append(data_trajectories1)
             data_current_state.append(data_current_state1)
@@ -110,6 +114,7 @@ class DataHandler:
         print("Create training/testing/validation sets")
 
         train_traj, test_traj, valid_traj, \
+        train_current, test_current, valid_current, \
         train_goal, test_goal, valid_goal, \
         train_act, test_act, valid_act = self.split_and_shaffle(data_trajectories=data_trajectories,
                                                                   data_current_state=data_current_state,
@@ -118,7 +123,12 @@ class DataHandler:
 
         print("----")
 
+        # ------------------------------------------------------------------
+        # Zero-Padding???
+        # ------------------------------------------------------------------
+
         return train_traj, test_traj, valid_traj, \
+               train_current, test_current, valid_current, \
                train_goal, test_goal, valid_goal, \
                train_act,  test_act,  valid_act
 
@@ -239,7 +249,7 @@ class DataHandler:
         MIN_ACTIONS = 5
         for i in range(MIN_ACTIONS, trajectories.shape[0]):
             data_trajectories.append(trajectories[0:i,...])     # Trajectory to the state
-            data_current_state.append(trajectories[i,..., 0:2]) # Current state # (1walls + 1player + 4goals)
+            data_current_state.append(trajectories[i,..., 0:6]) # Current state # (1walls + 1player + 4goals)
             data_actions.append(actions[i,...])                 # Next Action
             data_labels.append(labels[i,...])                   # Consumed Goal
 
@@ -263,484 +273,36 @@ class DataHandler:
         test_traj = [data_trajectories[i] for i in test_indexes]
         valid_traj = [data_trajectories[i] for i in valid_indexes]
 
+        train_current = [data_current_state[i] for i in train_indexes]
+        test_current = [data_current_state[i] for i in test_indexes]
+        valid_current = [data_current_state[i] for i in valid_indexes]
+
+        train_goal = [data_labels[i] for i in train_indexes]
+        test_goal = [data_labels[i] for i in test_indexes]
+        valid_goal = [data_labels[i] for i in valid_indexes]
+
+        train_act = [data_actions[i] for i in train_indexes]
+        test_act = [data_actions[i] for i in test_indexes]
+        valid_act = [data_actions[i] for i in valid_indexes]
+
+        # Unpack lists in data to be a single list of all games
+        train_traj = sum(train_traj, [])
+        test_traj = sum(test_traj, [])
+        valid_traj = sum(valid_traj, [])
+
+        train_current = sum(train_current, [])
+        test_current = sum(test_current, [])
+        valid_current = sum(valid_current, [])
+
+        train_goal = sum(train_goal, [])
+        test_goal = sum(test_goal, [])
+        valid_goal = sum(valid_goal, [])
+
+        train_act = sum(train_act, [])
+        test_act = sum(test_act, [])
+        valid_act = sum(valid_act, [])
 
         return train_traj, test_traj, valid_traj, \
+               train_current, test_current, valid_current, \
                train_goal, test_goal, valid_goal, \
                train_act, test_act, valid_act
-
-    def parse_whole_data_set(self, directory, mode, shuf, subset_size = -1, parse_query_state = False):
-        '''
-        Parse the trajectory (if `parse_query_state = False`) or the query state
-        (if `parse_query_state = True`) of a txt file.
-
-        Args:
-        :param subset_size: The size of the subset (number of files) to be parsed.
-          Default to the special number -1, which means using all the files in
-          the directory. When testing the code, this could help reducing the parsing time.
-        :param parse_query_state: if 'True', parse only the query states
-          and skip the actions; if 'False', parse the whole sequence
-          of trajectories
-
-        Returns:
-          :train_data:
-            the training data.
-            if `parse_query_state = False`,
-            then return 5D numpy array (num_files, trajectory_size, height, width, depth_trajectory);
-            if `parse_query_state = True`,
-            then return 4D numpy array (num_files, height, width, depth_query_state);
-
-          :train_labels:
-            a batch data. 2D numpy array (num_files, 1)
-        '''
-        # --------------------------------------
-        # List all txt files to be parsed
-        # --------------------------------------
-        files = self.list_txt_files(directory)
-
-        if subset_size != -1:
-          files = files[0:subset_size]
-
-        # --------------------------------------
-        # Print out parsing message
-        # --------------------------------------
-        if not parse_query_state:
-          parse_mode = 'trajectories---------------'
-        else:
-          parse_mode = 'query states---------------'
-        print('Parse ', parse_mode)
-        print('Found', len(files), 'files in', directory)
-
-        #pdb.set_trace()
-
-        #Shuffle the filenames
-        if shuf:
-          # note that shuf = False by default
-          # See commented_main_model() for details:
-          # section: if __name__ == "__main__":
-            shuffle(files)
-        # pdb.set_trace()
-
-        # Size of data set
-        # Train : Vali: Test = 80 : 10 : 10
-        train_files = files[0:int(len(files)*0.8)]
-        vali_files = files[int(len(files)*0.8):int(len(files)*0.9)]
-        test_files = files[int(0.9*len(files)):len(files)]
-
-        #Initialize empty arrays for data
-        train_data = []
-        train_labels = []
-        vali_data = []
-        vali_labels =[]
-        test_data = []
-        test_labels=[]
-
-        if mode == 'train' or mode == 'all':
-            print('Parsing training data')
-            train_data, train_labels = self.parse_subset(directory, train_files, parse_query_state)
-            print('Parsing validation data')
-            vali_data, vali_labels = self.parse_subset(directory, vali_files, parse_query_state)
-
-        if mode == 'test' or mode == 'all':
-            print('Parsing testing data')
-            test_data, test_labels = self.parse_subset(directory, test_files, parse_query_state)
-
-        return train_data, vali_data, test_data, train_labels, vali_labels, test_labels, files, train_files, vali_files, test_files
-
-    def list_txt_files(self,directory):
-      '''
-        This function wil return all the txt files in a given directory.
-        Args:
-          :param directory: the directory of the files to be listed.
-
-        Returns:
-          :files:
-            all the txt files in the directory.
-      '''
-      # The list is in arbitrary order.
-      # (the order has to do with the way the files are indexed on your FileSystem)
-      # The order is fixed if runnning from the same machine
-      files = os.listdir(directory)
-      # pdb.set_trace()
-      # Filter out the csv file (only read the txt files)
-      r = re.compile(".*.txt")
-      files = list(filter(r.match, files))
-      return files
-
-    def parse_subset(self, directory, files, parse_query_state, with_label = True):
-        '''
-        This function will parse all the files in the directoy and return
-        the corresponding tensors and labels.
-        Args:
-          :param directory:
-            the directory of the files to be parse
-          :param files:
-            the txt files to be parsed
-          :param parse_query_state:
-            if 'True', parse only the query states
-            and skip the actions; if 'False', parse the whole sequence
-            of trajectories
-          :param with_label:
-            whether the query state file contains the final
-            target (default to True). Note that this will be False for
-            preference inference on equal-distance files since there are no
-            final tagrgets in such files.
-
-        Returns:
-          :all_data:
-            if `parse_query_state == True`,
-            return the 4D tensor of the query state
-            (num_files, MAZE_WIDTH, MAZE_HEIGHT, MAZE_DEPTH_QUERY_STATE);
-            if `parse_query_state == False`,
-            return the 5D tensor of the whole trajectory
-            (num_files, trajectory_size, MAZE_WIDTH, MAZE_HEIGHT, MAZE_DEPTH_TRAJECTORY).
-          :all_labels:
-            the numeric index of the final target (len(files), 1)
-        '''
-        # --------------------------------------------------------------
-        # Initialize empty arrays and constants
-        # --------------------------------------------------------------
-        # pdb.set_trace()
-        if not parse_query_state:
-            #all_data_one_row = np.empty([len(files) * self.MAX_TRAJECTORY_SIZE,self.MAZE_WIDTH,self.MAZE_HEIGHT,self.MAZE_DEPTH_TRAJECTORY])
-            all_data = np.empty([self.MAX_TRAJECTORY_SIZE,self.MAZE_WIDTH,self.MAZE_HEIGHT,self.MAZE_DEPTH_TRAJECTORY])
-        else:
-          all_data = np.empty([self.MAZE_WIDTH,self.MAZE_HEIGHT,self.MAZE_DEPTH_QUERY_STATE])
-
-        all_labels = np.empty([1])
-
-        # local constant
-        num_dummy_values =  all_data.shape[0]
-        num_files = len(files)
-        # --------------------------------------------------------------
-        # Parse file one by one
-        # --------------------------------------------------------------
-        i = 0 # file index
-        j = 0 # for tracking progress (%)
-        if not parse_query_state:
-            # Parse data and labels
-            for file in files:
-                i += 1
-                if i > j*len(files)/100:
-                    print('Parsed ' + str(j) + '%')
-                    j+=10
-                traj, goal = self.parse_trajectory(os.path.join(directory, file))
-                all_data = np.vstack((all_data,traj))
-                for step in traj:
-                    all_labels = np.hstack((all_labels,np.array(goal)))
-        else:
-            # Parse data and labels
-            for file in files:
-                i += 1
-                if i > j*len(files)/100:
-                    print('Parsed ' + str(j) + '%')
-                    j+=10
-                query_state, goal = self.parse_query_state(os.path.join(directory, file),\
-                                                           with_label)
-                #pdb.set_trace()
-                all_data = np.vstack((all_data,query_state))
-                all_labels = np.hstack((all_labels,np.array(goal)))
-            #pdb.set_trace()
-        print('Parsed ' + str(j) + '%')
-
-        # --------------------------------------------------------------
-        # Clean up leading dummy values
-        # --------------------------------------------------------------
-        # Delete the leading empty elements
-        #pdb.set_trace()
-        for i in range(num_dummy_values):
-            all_data = np.delete(all_data,(0), axis=0)
-          # Delete the leading 1 number(see "all_labels = np.empty([1])")
-        all_labels = np.delete(all_labels,(0), axis=0)
-        #pdb.set_trace()
-
-        # --------------------------------------------------------------
-        # Reshaping the data tensor and labels tensor:
-        # data = (num_files x dim_1, dim_2, ...) ->
-        # data = (num_files, dim_1, dim_2, ...)
-        # --------------------------------------------------------------
-        if not parse_query_state:
-          # Because I removed zero padding in data loading I must add zero padding here
-          cutted_batch_num = int(all_data.shape[0] / 10)    # 1275 - > 127
-          all_data = all_data[: int(10*cutted_batch_num)]   # data[:1275] -> data[:1270] (dividable to 10)
-          all_data = all_data.reshape(cutted_batch_num,
-                                      self.MAX_TRAJECTORY_SIZE, self.MAZE_WIDTH,
-                                      self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY) # (1270, 12, 12, 11) -> (127, 10, 12, 12, 11)
-          # all_data = all_data.reshape(num_files,
-          #                             self.MAX_TRAJECTORY_SIZE, self.MAZE_WIDTH,
-          #                             self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY)
-          # --------------------------------------------------------------
-          # Only retain unique labels
-          # test_labels = （total_steps, ） ->
-          # test_labels = (num_files, )
-          # --------------------------------------------------------------
-          all_labels = all_labels[: int(10*cutted_batch_num)]   # cut in the same manner as the data
-          all_labels = all_labels[0:-1:self.MAX_TRAJECTORY_SIZE]
-        else:
-           all_data = all_data.reshape(num_files,
-                                      self.MAZE_WIDTH,self.MAZE_HEIGHT,
-                                      self.MAZE_DEPTH_QUERY_STATE)
-        print('Got ' + str(all_data.shape) + ' datapoints')
-        # pdb.set_trace()
-        return all_data, all_labels
-
-
-    def parse_trajectory(self, filename):
-        '''
-        This function wil return a 4-dim tensor with all the steps in a trajectory defined in the map of the given txt file.
-        The tensor will be of shape (MAX_TRAJECTORY_SIZE, MAZE_WIDTH, MAZE_HEIGHT, MAZE_DEPTH_QUERY_STATE).
-        '''
-        #self.parse_query_state(filename)
-
-        steps = []
-        #output.shape(12, 12, 11, 10)
-        output = np.zeros((self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY, self.MAX_TRAJECTORY_SIZE))
-        label = ''
-        with open(filename) as fp:
-            lines = list(fp)
-            maze = lines[2:self.MAZE_WIDTH+2]
-
-            #Parse maze to 2d array, remove walls.
-            i=0
-            while i < self.MAZE_WIDTH: # in the txt file, each maze has self.MAZE_WIDTH (12) lines
-                maze[i]= list(maze[i])
-                maze[i].pop(0)                  # Deletes first map row-element which should be a wall
-                maze[i].pop(len(maze[i])-1)     # Deletes last map row-element which should be '\n'
-                maze[i].pop(len(maze[i])-1)     # Deletes last map row-element which should be a wall
-                i+=1
-
-            #Original maze (without walls)
-            np_maze = np.array(maze)
-
-            #Plane for obstacles
-            np_obstacles = np.where(np_maze == '#', 1, 0).astype(np.int8)
-
-            #Plane for agent's initial position
-            np_agent = np.where(np_maze == 'S', 1, 0).astype(np.int8)
-
-            ### Create layers for Goal Map representation
-            #Planes for each possible goal
-            #targets = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m']
-            targets = ['C','D','E','F'] # for the simplified 4-targets mazes ### NIKITA: THAT WILL BE CHANGED TO A, B, C, D
-            np_targets = np.repeat(np_maze[:, :, np.newaxis], len(targets), axis=2)
-            for target, i in zip(targets, range(len(targets))):
-                np_targets[:,:,i] = np.where(np_maze == target, 1, 0)
-            # np_targets.shape = (12, 12, 4)
-            np_targets = np_targets.astype(int)
-
-            ### Create Player Position Trajectory
-            #Parse trajectory into 2d array
-            trajectory = lines[self.MAZE_WIDTH+3:]
-            agent_locations = []
-            for tau in trajectory:
-                tau = tau[1:len(tau)-2]   # Remove '(output)\n' and leave only two coordinates separated by ,
-                tmp = tau.split(",")
-                try:
-                    agent_locations.append([tmp[0],tmp[1]])
-                except:pass
-
-            ### Create Actions Trajectory
-            possible_actions=['right', 'left', 'up', 'down', 'goal']
-            for i in range(len(agent_locations) - 1):
-
-                #Create a 12x12sx4 tensor for each t(x,a)
-                np_actions = np.zeros((self.MAZE_WIDTH, self.MAZE_HEIGHT,len(possible_actions)), dtype=np.int8)
-                #Determine the type of action
-                if agent_locations[i][0] > agent_locations[i+1][0]:
-                    layer = 'left'
-                elif agent_locations[i][0] < agent_locations[i+1][0]:
-                    layer = 'right'
-                elif agent_locations[i][1] > agent_locations[i+1][1]:
-                    layer = 'up'
-                elif agent_locations[i][1] < agent_locations[i+1][1]:
-                    layer = 'down'
-                # Assign a value of 1 to the location where the action starts
-                # np_actions.shape = (12, 12, 5)
-                np_actions[int(agent_locations[i][1])-1, int(agent_locations[i][0])-1, possible_actions.index(layer)] = 1
-
-                # For each step:
-                # np_tensor.shape = (12, 12, 11)
-                # DEPTH = 11 layers = 1 (obstacle) + 4 (targets) + 1 (agent initial position) + 5 (actions)
-                np_tensor = np.dstack((np_obstacles,np_targets,np_agent,np_actions))
-                steps.append(np_tensor)
-                output = np.array(steps)
-
-            #The last tensor of every trajectory will be the position of the goal.
-            np_actions = np.zeros((self.MAZE_WIDTH, self.MAZE_HEIGHT, len(possible_actions)), dtype=np.int8)
-            np_actions[int(agent_locations[-1][1])-1, int(agent_locations[-1][0])-1, possible_actions.index('goal')] = 1
-
-            # For the last step:
-            # np_tensor.shape = (12, 12, 11)
-            # DEPTH = 11 layers = 1 (obstacle) + 4 (targets) + 1 (agent initial position) + 5 (actions)
-            np_tensor = np.dstack((np_obstacles,np_targets,np_agent,np_actions))
-
-            # ---------------------------------------
-            # Generate the label (could be training_label, valid_label, testing_label)
-            # (y, an int from 0 to 3)
-            # ---------------------------------------
-            # Make the label from the letter in the final position of the agent
-            goal = np_maze[int(agent_locations[-1][1])-1][int(agent_locations[-1][0])-1]
-            char_to_int = dict((c, i) for i, c in enumerate(targets))
-            integer_encoded = char_to_int[goal]
-            #label = [0 for _ in range(len(targets))]
-            #label[integer_encoded] = 1
-
-            #Return label as a number
-            label = int(integer_encoded)
-
-            # ---------------------------------------
-            # Generate each training/valid/testing example (one trajectory)
-            # ---------------------------------------
-            # Put everything step together in a 4-dim tensor: "output" (one trajectory)
-            # each output (4-dim tensor, will be of shape after padding/truncating = (10, 12, 12, 11))
-            # contain 10 layers ("np_tensor", 3-dim tensor, shape = (12, 12, 11))
-            steps.append(np_tensor)
-            output = np.array(steps)
-
-            ## NIKITA: This part adds zeroes 1x12x12x10 to make all games the same size
-            ## NIKITA: Maybe this part influence learning, as you learn NN on zeroes!
-            ## NIKITA: Should be considered to change this part!!!
-            ## START
-
-            # pdb.set_trace()
-            pad_size = int(self.MAX_TRAJECTORY_SIZE - output.shape[0])
-            # print("pad_size: ", pad_size)
-
-            #Zeroes pre-padding to max length
-            if pad_size > 0:
-                np_pad = np.zeros((self.MAZE_HEIGHT,self.MAZE_WIDTH,self.MAZE_DEPTH_TRAJECTORY), dtype=np.int8)
-                for i in range(pad_size):
-                    # insert the zero layer to the head
-                    output = np.insert(output, 0, np_pad, axis=0)
-
-            #Truncating trajectory to max length
-            elif pad_size < 0:
-                for i in range(abs(pad_size)):
-                    # remove the first step
-                    output = np.delete(output, 0, axis=0)
-
-            ## END
-
-        fp.close()
-        return output, label
-
-    def parse_query_state(self, filename, with_label = True):
-        '''
-        This function wil return a 3-dim tensor including the static information
-        of a maze, including 6 layers:
-          (1) obstacles (1 layer)
-          (2) agent initial position (1 layer)
-          (3)target positions (4 layers)
-        This function is primary for prednet as it needs query state as input.
-
-        Args:
-          :param filename:
-            the txt file of the trajectory of interest
-          :param with_label:
-            whether the query state file contains the final target (default to True).
-            Note that this will be False for preference inference on
-            equal-distance files since there are no final tagrgets in such files.
-
-        Returns:
-          :np_query_state_tensor:
-            a batch data. 3D numpy array of the query state
-            (MAZE_WIDTH, MAZE_HEIGHT, MAZE_DEPTH_QUERY_STATE)
-          :label: the numeric index of the final target. This will be -1
-          if `with_label = False`
-        '''
-        # --------------------------------------------------------------
-        # Construct the query state tensor: (12, 12, 6)
-        # --------------------------------------------------------------
-        #output.shape(12, 12, 6)
-        # pdb.set_trace()
-        with open(filename) as fp:
-            lines = list(fp)
-            maze = lines[2:14]
-
-            #Parse maze to 2d array, remove walls.
-            i=0
-            while i < 12: # in the txt file, each maze has 12 lines
-                maze[i]= list(maze[i])
-                maze[i].pop(0)
-                maze[i].pop(len(maze[i])-1)
-                maze[i].pop(len(maze[i])-1)
-                i+=1
-
-            #Original maze (without walls)
-            np_maze = np.array(maze)
-
-            #Plane for obstacles
-            np_obstacles = np.where(np_maze == '#', 1, 0).astype(np.int8)
-
-            #Plane for agent's initial position
-            np_agent = np.where(np_maze == 'S', 1, 0).astype(np.int8)
-
-            #Planes for each possible goal
-            #targets = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m']
-            targets = ['C','D','E','F'] # for the simplified 4-targets mazes
-            np_targets = np.repeat(np_maze[:, :, np.newaxis], len(targets), axis=2)
-            for target, i in zip(targets, range(len(targets))):
-                np_targets[:,:,i] = np.where(np_maze == target, 1, 0)
-            # np_targets.shape = (12, 12, 4)
-            np_targets = np_targets.astype(int)
-
-            # For each trajectory:
-            # np_query_state_tensor.shape = (12, 12, 6)
-            # DEPTH = 11 layers = 1 (obstacle) + 4 (targets) + 1 (agent initial position)
-            np_query_state_tensor = np.dstack((np_obstacles,np_targets,np_agent))
-
-            if with_label:
-              # --------------------------------------------------------------
-              # Retrieve the final target (could be training_label, valid_label, testing_label):
-              # size = 1, an int from 0 to 3
-              # --------------------------------------------------------------
-              #Parse trajectory into 2d array
-              # pdb.set_trace()
-              trajectory = lines[15:]
-              agent_locations = []
-              for i in trajectory:
-                  i = i[1:len(i)-2]
-                  tmp = i.split(",")
-                  try:
-                      agent_locations.append([tmp[0],tmp[1]])
-                  except:pass
-
-              # Make the label from the letter in the final position of the agent
-              goal = np_maze[int(agent_locations[-1][1])-1][int(agent_locations[-1][0])-1]
-              char_to_int = dict((c, i) for i, c in enumerate(targets))
-              integer_encoded = char_to_int[goal]
-              #label = [0 for _ in range(len(targets))]
-              #label[integer_encoded] = 1
-
-              #Return label as a number
-              label = int(integer_encoded)
-            else:
-              # --------------------------------------------------------------
-              # When there is no label in the query state file.
-              # --------------------------------------------------------------
-              label = int(-1)
-        fp.close()
-        # pdb.set_trace()
-        return np_query_state_tensor, label
-
-    def find_max_path(self, dir):
-        paths = []
-        for filename in os.listdir(dir):
-            with open(os.path.join(dir, filename)) as fp:
-                lines = list(fp)
-                trajectory = len(lines[15:-1])
-                paths.append(trajectory)
-        self.MAX_TRAJECTORY_SIZE = max(paths)
-        print("Longest trajectory:", self.MAX_TRAJECTORY_SIZE)
-        #NHWC N: Number of images in a batch, H: Height, W: Width, C: Channels
-
-
-if __name__ == "__main__":
-    #This will get the trajectory of the specified file and plot a sequence of images showing the result of the parse.
-    dir = os.getcwd() + '/S002a/'
-    file = 'S002_1'
-    dh = DataHandler(dir)
-    dh.parse_trajectories(dir, mode='all', shuf=False)
-    #out, label = dh.parse_trajectory(dir + file + '.txt')
-    #print(out.shape)
-    #print(label)
-    #plot_trajectory(file, out)
