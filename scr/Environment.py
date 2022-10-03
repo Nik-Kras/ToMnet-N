@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 from MapGenerator.Grid import *
 
@@ -125,6 +126,8 @@ class GridWorld():
         #self.transition_matrix = np.ones((self.action_space_size, self.action_space_size))/ self.action_space_size
         self.transition_matrix = np.eye(self.action_space_size)
 
+        self.simple_map = np.ones((self.world_row, self.world_col), dtype=np.int16)
+
         self.state_matrix = [np.zeros((self.world_row, self.world_col), dtype=np.float16),
                              np.zeros((self.world_row, self.world_col), dtype=np.float16),
                              np.zeros((self.world_row, self.world_col), dtype=np.float16)]             # Environmental Map of walls and goals
@@ -241,23 +244,23 @@ class GridWorld():
 
 
     def get_sight(self, sight, observability="partial"):
-        simple_map = np.ones((self.world_row, self.world_col), dtype=np.int16)  # 0-wall, 1-path. Start with all path, then add walls, then add goals
+        self.simple_map = np.ones((self.world_row, self.world_col), dtype=np.int16)  # 0-wall, 1-path. Start with all path, then add walls, then add goals
 
         # Put walls
         for row in range(self.world_row):
             for col in range(self.world_col):
-                if self.state_matrix[self.WallMap][row, col] == self.MapSym[self.WallMap]["Wall"]: simple_map[row, col] = self.ObjSym["Wall"]
+                if self.state_matrix[self.WallMap][row, col] == self.MapSym[self.WallMap]["Wall"]: self.simple_map[row, col] = self.ObjSym["Wall"]
 
         # Put goals
         for row in range(self.world_row):
             for col in range(self.world_col):
-                if   self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal A"]: simple_map[row, col] = self.ObjSym["Goal A"]
-                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal B"]: simple_map[row, col] = self.ObjSym["Goal B"]
-                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal C"]: simple_map[row, col] = self.ObjSym["Goal C"]
-                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal D"]: simple_map[row, col] = self.ObjSym["Goal D"]
+                if   self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal A"]: self.simple_map[row, col] = self.ObjSym["Goal A"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal B"]: self.simple_map[row, col] = self.ObjSym["Goal B"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal C"]: self.simple_map[row, col] = self.ObjSym["Goal C"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal D"]: self.simple_map[row, col] = self.ObjSym["Goal D"]
 
         if observability == "full":
-            return self.position, simple_map
+            return self.position, self.simple_map
 
         result = np.full((sight, sight), None)
 
@@ -268,7 +271,7 @@ class GridWorld():
                 y = j + self.position[1] - half_sight
 
                 if -1 < x < self.world_row and -1 < y < self.world_col:
-                    result[i, j] = simple_map[x, y]
+                    result[i, j] = self.simple_map[x, y]
 
         return self.position, result
 
@@ -606,20 +609,20 @@ class GridWorld():
         # FUTURE DEVELOPMENT: I can create graph in first two cycles!
 
         # 1. Create 1xROWxCOL map from 3xROWxCOL
-        simple_map = np.ones((self.world_row, self.world_col), dtype=np.int16)  # 0-wall, 1-path. Start with all path, then add walls, then add goals
+        self.simple_map = np.ones((self.world_row, self.world_col), dtype=np.int16)  # 0-wall, 1-path. Start with all path, then add walls, then add goals
 
         # Put walls
         for row in range(self.world_row):
             for col in range(self.world_col):
-                if self.state_matrix[self.WallMap][row, col] == self.MapSym[self.WallMap]["Wall"]: simple_map[row, col] = self.ObjSym["Wall"]
+                if self.state_matrix[self.WallMap][row, col] == self.MapSym[self.WallMap]["Wall"]: self.simple_map[row, col] = self.ObjSym["Wall"]
 
         # Put goals
         for row in range(self.world_row):
             for col in range(self.world_col):
-                if   self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal A"]: simple_map[row, col] = self.ObjSym["Goal A"]
-                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal B"]: simple_map[row, col] = self.ObjSym["Goal B"]
-                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal C"]: simple_map[row, col] = self.ObjSym["Goal C"]
-                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal D"]: simple_map[row, col] = self.ObjSym["Goal D"]
+                if   self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal A"]: self.simple_map[row, col] = self.ObjSym["Goal A"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal B"]: self.simple_map[row, col] = self.ObjSym["Goal B"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal C"]: self.simple_map[row, col] = self.ObjSym["Goal C"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal D"]: self.simple_map[row, col] = self.ObjSym["Goal D"]
 
 
         # 2. Draw a Map
@@ -633,17 +636,52 @@ class GridWorld():
 
                 # Draw walls, paths and goals
                 else:
-                    if   simple_map[row, col] == self.ObjSym["Wall"]:   row_string += ' # '  # Wall
-                    elif simple_map[row, col] == self.ObjSym["Path"]:   row_string += ' - '  # Path
-                    elif simple_map[row, col] == self.ObjSym["Goal A"]: row_string += ' A '  # Goal 1
-                    elif simple_map[row, col] == self.ObjSym["Goal B"]: row_string += ' B '  # Goal 2
-                    elif simple_map[row, col] == self.ObjSym["Goal C"]: row_string += ' C '  # Goal 3
-                    elif simple_map[row, col] == self.ObjSym["Goal D"]: row_string += ' D '  # Goal 4
+                    if   self.simple_map[row, col] == self.ObjSym["Wall"]:   row_string += ' # '  # Wall
+                    elif self.simple_map[row, col] == self.ObjSym["Path"]:   row_string += ' - '  # Path
+                    elif self.simple_map[row, col] == self.ObjSym["Goal A"]: row_string += ' A '  # Goal 1
+                    elif self.simple_map[row, col] == self.ObjSym["Goal B"]: row_string += ' B '  # Goal 2
+                    elif self.simple_map[row, col] == self.ObjSym["Goal C"]: row_string += ' C '  # Goal 3
+                    elif self.simple_map[row, col] == self.ObjSym["Goal D"]: row_string += ' D '  # Goal 4
                     else: print("ERROR: Incorrect map value! Position: " ,row, ", ", col)
 
             row_string += '\n'
             graph += row_string
         print(graph)
+
+    def draw_map(self):
+
+        # 1. Create 1xROWxCOL map from 3xROWxCOL
+        self.simple_map = np.ones((self.world_row, self.world_col),
+                                  dtype=np.int16)  # 0-wall, 1-path. Start with all path, then add walls, then add goals
+
+        # Put walls
+        for row in range(self.world_row):
+            for col in range(self.world_col):
+                if self.state_matrix[self.WallMap][row, col] == self.MapSym[self.WallMap]["Wall"]: self.simple_map[
+                    row, col] = self.ObjSym["Wall"]
+
+        # Put goals
+        for row in range(self.world_row):
+            for col in range(self.world_col):
+                if self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal A"]:
+                    self.simple_map[row, col] = self.ObjSym["Goal A"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal B"]:
+                    self.simple_map[row, col] = self.ObjSym["Goal B"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal C"]:
+                    self.simple_map[row, col] = self.ObjSym["Goal C"]
+                elif self.state_matrix[self.GoalMap][row, col] == self.MapSym[self.GoalMap]["Goal D"]:
+                    self.simple_map[row, col] = self.ObjSym["Goal D"]
+
+        # Put player
+        for row in range(self.world_row):
+            for col in range(self.world_col):
+                if self.state_matrix[self.PlayerMap][row, col] == self.MapSym[self.PlayerMap]["Player"]: self.simple_map[
+                    row, col] = self.ObjSym["Player"]
+
+        plt.axis('off')
+        plt.imshow(self.simple_map)
+        plt.show()
+        print(self.simple_map)
 
     """
         According to Open AI principles applied to Gym package - 
