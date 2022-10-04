@@ -38,15 +38,19 @@ class DataHandler:
         self.TRAJ_START = self.TRAJ_LENGTH + 1
 
     # It loads full trajectory, sequence of actions and consumed goal per game
-    def load_all_games(self, directory):
+    def load_all_games(self, directory, use_percentage=1):
 
         # Get names of games
         files = os.listdir(directory)
         r = re.compile(".*.txt")
         files = list(filter(r.match, files))
         Nfiles = len(files)
+        Nfraction = int(np.ceil(use_percentage * Nfiles))   # Apply a fraction division
+        files = files[:Nfraction]
         print("----")
         print("Saved Games found: ", Nfiles)
+        print("Saved Games loaded: ", Nfraction)
+        print("Percentage of loaded games: ", use_percentage*100, "%")
         print("Games names: ", files)
 
         # Save all trajectories and labels
@@ -69,7 +73,7 @@ class DataHandler:
             labels.append(goal)
 
             # Keep track on progress
-            if i >= int(np.ceil(j * Nfiles / 100))-1:
+            if i >= int(np.ceil(j * Nfraction / 100))-1:
                 print('Parsed ' + str(j) + '%')
                 j += 10
         print("----")
@@ -86,7 +90,7 @@ class DataHandler:
         j = 0  # for tracking progress (%)
 
         # Process Game-per-Game
-        for i in range(Nfiles):
+        for i in range(Nfraction):
 
             # Consider only games with more than 6 moves
             if trajectories[i].shape[0] < 6:
@@ -102,7 +106,7 @@ class DataHandler:
             data_labels.append(data_labels1)
 
             # Keep track on progress
-            if i >= int(np.ceil(j * Nfiles / 100))-1:
+            if i >= int(np.ceil(j * Nfraction / 100))-1:
                 print('Augmented data ' + str(j) + '%')
                 j += 10
 

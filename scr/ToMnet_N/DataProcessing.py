@@ -54,7 +54,10 @@ class DataProcessor:
                 # Fill the last elements with real trajectory (implement pre-zero padding)
                 for i in range(N):
                     Nt =  len(DictData[key][i]) # Number of real steps in the trajectory
-                    DataZeroPad[key][i][-Nt:,...] = DictData[key][i]
+                    if Nt > max_elements:
+                        DataZeroPad[key][i] = DictData[key][i][-max_elements:]
+                    else:
+                        DataZeroPad[key][i][-Nt:,...] = DictData[key][i]
 
         print("Zero Padding was applied!")
 

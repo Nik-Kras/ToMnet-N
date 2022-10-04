@@ -57,7 +57,7 @@ if __name__ == "__main__":
     ROW = 12
     COL = 12
     DEPTH = 10
-    MAX_TRAJ = 20
+    MAX_TRAJ = 15
 
     # --------------------------------------------------------
     # 1. Load Data
@@ -83,7 +83,8 @@ if __name__ == "__main__":
     train_current, test_current, valid_current, \
     train_goal, test_goal, valid_goal, \
     train_act, test_act, valid_act = \
-        data_handler.load_all_games(directory=path_exper_1)
+        data_handler.load_all_games(directory=path_exper_1,
+                                    use_percentage=0.25)
 
     Data = {"train_traj":train_traj,
             "test_traj":test_traj,
@@ -126,20 +127,25 @@ if __name__ == "__main__":
                       w = ROW,
                       h = COL,
                       d = DEPTH)
-    t.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    t.compile(loss='categorical_crossentropy',
+              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00005), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+              metrics=['accuracy'])
 
     # --------------------------------------------------------
     # 4. Train the model
     # --------------------------------------------------------
     print("Train a Model")
-    t.fit(x=X_Train, y=Y_goal_Train, validation_data=(X_Valid, Y_goal_Valid),
-          epochs=3, batch_size=10, verbose=2)
+    t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
+          epochs=10, batch_size=16, verbose=2)
 
     # --------------------------------------------------------
     # 5. Evaluate the model
     # --------------------------------------------------------
-    _, accuracy = t.evaluate(x=X_Test, y=Y_goal_Test)
+    _, accuracy = t.evaluate(x=X_Test, y=Y_act_Test)
     print('Accuracy: %.2f' % (accuracy * 100))
+
+    # print(X_Test[0])
+    # print(t.predict(X_Test[0]))
 
     # --------------------------------------------------------
     # 6. Save the model
