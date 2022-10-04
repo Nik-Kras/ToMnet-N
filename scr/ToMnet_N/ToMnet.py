@@ -14,7 +14,7 @@ from ToMnet_N.PredNet import *
 
 class ToMnet(Model):
     BATCH_SIZE = 16
-    TRAJECTORY_SHAPE = (10, 12, 12, 11)
+    TRAJECTORY_SHAPE = (20, 12, 12, 10)
     CURRENT_STATE_SHAPE = (12, 12, 6)
 
     LENGTH_E_CHAR = 8
@@ -23,8 +23,13 @@ class ToMnet(Model):
     TRAIN_EMA_DECAY = 0.95
     INIT_LR = 0.0001
 
-    def __init__(self):
+    def __init__(self, ts, w, h, d):
         super(ToMnet, self).__init__(name="ToMnet-N")
+
+        self.MAX_TRAJECTORY_SIZE = ts  # 20-50
+        self.MAZE_WIDTH = w  # 12
+        self.MAZE_HEIGHT = h  # 12
+        self.MAZE_DEPTH_TRAJECTORY = d  # 10
 
         # Create the model
         self.char_net = CharNet(input_tensor=self.TRAJECTORY_SHAPE,
@@ -36,8 +41,8 @@ class ToMnet(Model):
         # Set compilers / savers / loggers / callbacks
 
     def call(self, inputs):
-        input_trajectory = inputs[..., 0:10, :, :, :]
-        input_current_state = inputs[..., 10, :, :, 0:6]
+        input_trajectory = inputs[..., 0:self.MAX_TRAJECTORY_SIZE, :, :, :]
+        input_current_state = inputs[..., self.MAX_TRAJECTORY_SIZE, :, :, 0:6]
 
         e_char = self.char_net(input_trajectory)
 
@@ -75,5 +80,5 @@ class ToMnet(Model):
     ### This is a trick to view shapes in summary() via
     ### model.model().summary()
     def model(self):
-        x = tf.keras.Input(shape=(11, 12, 12, 11))
+        x = tf.keras.Input(shape=(20, 12, 12, 11))
         return tf.keras.Model(inputs=[x], outputs=self.call(x))

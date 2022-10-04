@@ -678,6 +678,19 @@ class GridWorld():
                 if self.state_matrix[self.PlayerMap][row, col] == self.MapSym[self.PlayerMap]["Player"]: self.simple_map[
                     row, col] = self.ObjSym["Player"]
 
+        fig = plt.figure()
+        #fig_grid = fig.add_subplot(111) # fig.add_subplot(121)
+        #fig_health = fig.add_subplot(243)
+        #fig_visible = fig.add_subplot(244)
+
+        # fig.imshow(self.simple_map, vmin=-1, vmax=1, cmap='jet')
+        #fig_visible.matshow(visible, vmin=-1, vmax=1, cmap='jet')
+        # Render health chart
+        #health_plot[i] = health
+        # fig_health.clear()
+        # fig_health.axis([0, frames, 0, 2])
+        # fig_health.plot(health_plot[:i + 1])
+
         plt.axis('off')
         plt.imshow(self.simple_map)
         plt.show()

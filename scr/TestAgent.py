@@ -20,7 +20,7 @@ env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS)
 for i in range(1):
     env.reset()
     env.render()
-    agent = Agent.AgentRL(env, SIGHT)
+    agent = Agent.AgentStar(env, SIGHT)
 
     while True:
         agent.update_world_observation()
