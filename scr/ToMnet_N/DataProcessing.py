@@ -90,9 +90,10 @@ class DataProcessor:
 
         for key, value in UniData.items():
 
-
+            print("-----")
             if key[-len("input"):] == "input":
 
+                print("Apply concatenation to " + key + "... ")
                 # Add Trajectory in the beginning
                 purpose = key[:-(len("input")+1)] # train / test / valid
                 for i in range(len(DictData[purpose + "_traj"])):
@@ -105,5 +106,5 @@ class DataProcessor:
                     data_expanded = data_expanded[..., 0:10]
                     UniData[key][i][self.MAX_TRAJECTORY_SIZE] = data_expanded
 
-
+        print("Concatenation is finished")
         return UniData

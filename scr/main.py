@@ -89,9 +89,22 @@ if __name__ == "__main__":
 
     DataProcessed = data_processor.unite_traj_current(Data)
 
+
+    # Make Tensors from List
+    print("Converting data to Tensors... ")
+    X_Train = tf.convert_to_tensor(DataProcessed["train_input"])
+    list_of_arrays = DataProcessed["train_goal"]
+    indices = list(np.concatenate([list_of_arrays], axis=0))
+    indices = [x - 1 for x in indices] # 1-4 --> 0-3
+    depth = 4
+    Y_Train = tf.one_hot(indices, depth)# tf.convert_to_tensor(DataProcessed["train_goal"])
+    print("Converting is finished")
+
     # --------------------------------------------------------
     # 3. Create and set the model
     # --------------------------------------------------------
+    print("----")
+    print("Create a model")
     t = ToMnet.ToMnet(ts = MAX_TRAJ,
                       w = ROW,
                       h = COL,
@@ -101,10 +114,15 @@ if __name__ == "__main__":
     # --------------------------------------------------------
     # 4. Train the model
     # --------------------------------------------------------
+    print("Train a Model")
+    t.fit(x=X_Train, y=Y_Train,
+          epochs=15, batch_size=10, verbose=2)
 
     # --------------------------------------------------------
     # 5. Evaluate the model
     # --------------------------------------------------------
+    _, accuracy = t.evaluate(x=X_Train, y=Y_Train)
+    print('Accuracy: %.2f' % (accuracy * 100))
 
     # --------------------------------------------------------
     # 6. Save the model
