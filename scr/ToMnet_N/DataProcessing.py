@@ -93,27 +93,17 @@ class DataProcessor:
 
             if key[-len("input"):] == "input":
 
+                # Add Trajectory in the beginning
                 purpose = key[:-(len("input")+1)] # train / test / valid
-
                 for i in range(len(DictData[purpose + "_traj"])):
                     UniData[key][i][0:self.MAX_TRAJECTORY_SIZE] = DictData[purpose + "_traj"][i]
 
-                A = UniData[key]
-                real_m = 0
-                for a in A:
-                    m = np.max(a)
-                    if real_m < m:
-                        real_m = m
-                print(real_m)
-
-
-                A = DictData[purpose + "_traj"]
-                real_m = 0
-                for a in A:
-                    m = np.max(a)
-                    if real_m < m:
-                        real_m = m
-                print(real_m)
+                # Add Current in the end
+                for i in range(len(DictData[purpose + "_traj"])):
+                    # 12x12x6 -> 12x12x10
+                    data_expanded = np.repeat(DictData[purpose + "_current"][i], repeats=2, axis=-1)
+                    data_expanded = data_expanded[..., 0:10]
+                    UniData[key][i][self.MAX_TRAJECTORY_SIZE] = data_expanded
 
 
         return UniData
