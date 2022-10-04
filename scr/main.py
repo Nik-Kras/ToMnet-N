@@ -23,8 +23,30 @@ from ToMnet_N import ToMnet
 from ToMnet_N import DataLoader
 from ToMnet_N import DataProcessing
 
-def unite_traj_current(trajectory, current):
-    print("Done")
+def dict_to_tensors(Dict):
+
+    def make_y_outputs(folded_list):
+        list_of_arrays = folded_list
+        indices = list(np.concatenate([list_of_arrays], axis=0))
+        indices = [x - 1 for x in indices]  # 1-4 --> 0-3
+        depth = 4
+        return tf.one_hot(indices, depth)
+
+    X_Train = tf.convert_to_tensor(Dict["train_input"])
+    X_Test = tf.convert_to_tensor(Dict["test_input"])
+    X_Valid = tf.convert_to_tensor(Dict["valid_input"])
+
+    Y_goal_Train = make_y_outputs(Dict["train_goal"])
+    Y_goal_Test = make_y_outputs(Dict["test_goal"])
+    Y_goal_Valid = make_y_outputs(Dict["valid_goal"])
+
+    Y_act_Train = make_y_outputs(Dict["train_act"])
+    Y_act_Test = make_y_outputs(Dict["test_act"])
+    Y_act_Valid = make_y_outputs(Dict["valid_act"])
+
+    return X_Train, X_Test, X_Valid, \
+           Y_goal_Train, Y_goal_Test, Y_goal_Valid, \
+           Y_act_Train, Y_act_Test, Y_act_Valid,
 
 if __name__ == "__main__":
 
@@ -91,14 +113,9 @@ if __name__ == "__main__":
 
 
     # Make Tensors from List
-    print("Converting data to Tensors... ")
-    X_Train = tf.convert_to_tensor(DataProcessed["train_input"])
-    list_of_arrays = DataProcessed["train_goal"]
-    indices = list(np.concatenate([list_of_arrays], axis=0))
-    indices = [x - 1 for x in indices] # 1-4 --> 0-3
-    depth = 4
-    Y_Train = tf.one_hot(indices, depth)# tf.convert_to_tensor(DataProcessed["train_goal"])
-    print("Converting is finished")
+    X_Train, X_Test, X_Valid, \
+    Y_goal_Train, Y_goal_Test, Y_goal_Valid, \
+    Y_act_Train, Y_act_Test, Y_act_Valid = dict_to_tensors(DataProcessed)
 
     # --------------------------------------------------------
     # 3. Create and set the model
@@ -115,13 +132,13 @@ if __name__ == "__main__":
     # 4. Train the model
     # --------------------------------------------------------
     print("Train a Model")
-    t.fit(x=X_Train, y=Y_Train,
-          epochs=15, batch_size=10, verbose=2)
+    t.fit(x=X_Train, y=Y_goal_Train, validation_data=(X_Valid, Y_goal_Valid),
+          epochs=3, batch_size=10, verbose=2)
 
     # --------------------------------------------------------
     # 5. Evaluate the model
     # --------------------------------------------------------
-    _, accuracy = t.evaluate(x=X_Train, y=Y_Train)
+    _, accuracy = t.evaluate(x=X_Test, y=Y_goal_Test)
     print('Accuracy: %.2f' % (accuracy * 100))
 
     # --------------------------------------------------------

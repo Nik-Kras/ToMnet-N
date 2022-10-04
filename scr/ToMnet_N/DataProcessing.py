@@ -88,9 +88,9 @@ class DataProcessor:
             "valid_act": DictData["valid_act"]
         }
 
+        print("-----")
         for key, value in UniData.items():
 
-            print("-----")
             if key[-len("input"):] == "input":
 
                 print("Apply concatenation to " + key + "... ")
