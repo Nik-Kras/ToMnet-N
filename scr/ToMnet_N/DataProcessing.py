@@ -157,45 +157,47 @@ class DataProcessor:
         for index, tau in enumerate(traj):
             if index == 0:
 
-                # Take first frame of trajectory
-                frame_1 = tau[0]
+                for i in range(tau.shape[0]):
 
-                walls = frame_1[..., 0]
-                player = frame_1[..., 1]
-                goal1 = frame_1[..., 2]
-                goal2 = frame_1[..., 3]
-                goal3 = frame_1[..., 4]
-                goal4 = frame_1[..., 5]
+                    # Take i-th frame of trajectory
+                    frame_1 = tau[i]
 
-                fig, ax = plt.subplot_mosaic([
-                    ["walls", "player"], ["goal 1", "goal 2"], ["goal 3", "goal 4"]
-                ], constrained_layout=True, figsize=(16, 7))
+                    walls = frame_1[..., 0]
+                    player = frame_1[..., 1]
+                    goal1 = frame_1[..., 2]
+                    goal2 = frame_1[..., 3]
+                    goal3 = frame_1[..., 4]
+                    goal4 = frame_1[..., 5]
 
-                # Draw walls
-                ax["walls"].set_title("Walls")
-                ax["walls"].imshow(walls)
+                    fig, ax = plt.subplot_mosaic([
+                        ["walls", "player"], ["goal 1", "goal 2"], ["goal 3", "goal 4"]
+                    ], constrained_layout=True, figsize=(8, 4))
 
-                # Draw Player
-                ax["player"].set_title("Player")
-                ax["player"].imshow(player)
+                    # Draw walls
+                    ax["walls"].set_title("Walls")
+                    ax["walls"].imshow(walls)
 
-                # Draw Goal 1
-                ax["goal 1"].set_title("Goal 1")
-                ax["goal 1"].imshow(goal1)
+                    # Draw Player
+                    ax["player"].set_title("Player")
+                    ax["player"].imshow(player)
 
-                # Draw Goal 2
-                ax["goal 2"].set_title("Goal 2")
-                ax["goal 2"].imshow(goal2)
+                    # Draw Goal 1
+                    ax["goal 1"].set_title("Goal 1")
+                    ax["goal 1"].imshow(goal1)
 
-                # Draw Goal 3
-                ax["goal 3"].set_title("Goal 3")
-                ax["goal 3"].imshow(goal3)
+                    # Draw Goal 2
+                    ax["goal 2"].set_title("Goal 2")
+                    ax["goal 2"].imshow(goal2)
 
-                # Draw Goal 4
-                ax["goal 4"].set_title("Goal 4")
-                ax["goal 4"].imshow(goal4)
+                    # Draw Goal 3
+                    ax["goal 3"].set_title("Goal 3")
+                    ax["goal 3"].imshow(goal3)
 
-                plt.show()
+                    # Draw Goal 4
+                    ax["goal 4"].set_title("Goal 4")
+                    ax["goal 4"].imshow(goal4)
+
+                    plt.show()
 
 
 
