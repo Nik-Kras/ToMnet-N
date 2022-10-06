@@ -71,7 +71,7 @@ if __name__ == "__main__":
                                           h = COL,
                                           d = DEPTH)
 
-    path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Experiment 1')
+    path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Experiment 3')
 
     # Load 4 types of data for 3 purposes
     # Purpose:
