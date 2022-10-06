@@ -168,9 +168,14 @@ class DataProcessor:
                     goal2 = frame_1[..., 3]
                     goal3 = frame_1[..., 4]
                     goal4 = frame_1[..., 5]
+                    act1 = frame_1[..., 6]
+                    act2 = frame_1[..., 7]
+                    act3 = frame_1[..., 8]
+                    act4 = frame_1[..., 9]
 
                     fig, ax = plt.subplot_mosaic([
-                        ["walls", "player"], ["goal 1", "goal 2"], ["goal 3", "goal 4"]
+                        ["walls", "player"], ["goal 1", "goal 2", "goal 3", "goal 4"],
+                        ["act 1", "act 2", "goal 3", "goal 4"]
                     ], constrained_layout=True)
 
                     # Draw walls

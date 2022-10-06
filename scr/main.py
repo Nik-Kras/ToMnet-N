@@ -50,6 +50,10 @@ def dict_to_tensors(Dict):
 
 if __name__ == "__main__":
 
+    # To fix ERROR: OMP: Error #15: Initializing libiomp5, but found libiomp5md.dll already initialized.
+    # OMP: Hint This means that multiple copies of the OpenMP runtime have been linked into the program. That is dangerous, since it can degrade performance or cause incorrect results. The best thing to do is to ensure that only a single OpenMP runtime is linked into the process, e.g. by avoiding static linking of the OpenMP runtime in any library. As an unsafe, unsupported, undocumented workaround you can set the environment variable KMP_DUPLICATE_LIB_OK=TRUE to allow the program to continue to execute, but that may cause crashes or silently produce incorrect results. For more information, please see http://openmp.llvm.org/
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True' # SHOULD DELETE?
+
     # --------------------------------------------------------
     # CONSTANTS and Parameters
     # --------------------------------------------------------
@@ -109,13 +113,10 @@ if __name__ == "__main__":
 
     data_processor.validate_data(Data)
 
-    """
-
     Data = data_processor.zero_padding(max_elements= MAX_TRAJ,
                                               DictData=Data)
 
     DataProcessed = data_processor.unite_traj_current(Data)
-
 
     # Make Tensors from List
     X_Train, X_Test, X_Valid, \
@@ -132,7 +133,7 @@ if __name__ == "__main__":
                       h = COL,
                       d = DEPTH)
     t.compile(loss='categorical_crossentropy',
-              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00005), # tf.keras.optimizers.Adam(learning_rate=0.0001)
               metrics=['accuracy'])
 
     # --------------------------------------------------------
@@ -154,9 +155,6 @@ if __name__ == "__main__":
     # --------------------------------------------------------
     # 6. Save the model
     # --------------------------------------------------------
-    
-    """
-
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")
