@@ -133,7 +133,7 @@ if __name__ == "__main__":
                       h = COL,
                       d = DEPTH)
     t.compile(loss='categorical_crossentropy',
-              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00005), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00002), # tf.keras.optimizers.Adam(learning_rate=0.0001)
               metrics=['accuracy'])
 
     # --------------------------------------------------------

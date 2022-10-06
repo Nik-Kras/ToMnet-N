@@ -30,7 +30,8 @@ class CustomCnn(keras.layers.Layer):
                                   strides=(1, 1),
                                   activation=activation,
                                   padding="same",
-                                  # kernel_regularizer = keras.regularizers.l2(0.01), bias_regularizer = keras.regularizers.l2(0.01)
+                                  kernel_regularizer = keras.regularizers.l2(0.001),
+                                  bias_regularizer = keras.regularizers.l2(0.001)
                                   )
         else:
           self.conv = tf.keras.layers.Conv2D(filters=filters,
@@ -38,7 +39,10 @@ class CustomCnn(keras.layers.Layer):
                                   strides=(1, 1),
                                   activation=activation,
                                   padding="same",
-                                  input_shape=input_tensor)
+                                  input_shape=input_tensor,
+                                  kernel_regularizer = keras.regularizers.l2(0.001),
+                                  bias_regularizer = keras.regularizers.l2(0.001)
+                                  )
         if UseTimeWrapper: self.conv_handler = tf.keras.layers.TimeDistributed(self.conv)
         self.UseTimeWrapper = UseTimeWrapper
 
@@ -106,7 +110,7 @@ def ResBlockPredNet():
     return ResBlock(UseTimeWrapper=False)
 
 class CustomLSTM(keras.layers.Layer):
-  def __init__(self, num_hidden = 64, output_keep_prob = 0.2):
+  def __init__(self, num_hidden = 64, output_keep_prob = 0.02):
     super(CustomLSTM, self).__init__()
     self.num_hidden = num_hidden
     self.output_keep_prob = output_keep_prob
