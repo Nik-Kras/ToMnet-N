@@ -187,7 +187,6 @@ class DataHandler:
             Ntraj = int(Ntraj)
 
             # Save Actions & Save Trajectory
-
             trajectory = lines[self.TRAJ_START : self.TRAJ_START + Ntraj]
             agent_locations = []
             for i, tau in enumerate(trajectory):
@@ -208,6 +207,10 @@ class DataHandler:
                     agent_locations.append([int(row), int(col)])
                     act = np.append(act, int(tmp[1]))
                     goal = np.append(goal, goal_num) # self.sym_to_goal(tmp[2], consumed=)
+
+                    # Update Agent Location Tensor
+                    np_agent = np.zeros(shape=(self.MAZE_WIDTH, self.MAZE_HEIGHT), dtype = np.int8)
+                    np_agent[int(row), int(col)] = 1
 
                 # Make Trajectory Tensor
                 np_actions = np.zeros((self.MAZE_WIDTH, self.MAZE_HEIGHT, 4), dtype=np.int8)
