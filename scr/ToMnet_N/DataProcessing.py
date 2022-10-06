@@ -16,6 +16,7 @@ The data stored like: 1x12x12x10. 1 - Time Step, 12x12 - Map Resolution, 10 - De
 """
 
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 import numpy as np
 from random import shuffle
 import re
@@ -136,7 +137,8 @@ class DataProcessor:
         for key, value in DictData.items():
 
             if key[-len("traj"):] == "traj":
-                self.trajectory_validation(value)
+                if key == "train_traj":
+                    self.trajectory_validation(value)
             elif key[-len("current"):] == "current":
                 self.current_validation(value)
             elif key[-len("goal"):] == "goal":
@@ -150,46 +152,52 @@ class DataProcessor:
 
 
     def trajectory_validation(self, traj):
+        print("Trajectory validation... ")
 
         for index, tau in enumerate(traj):
-            if index == 1:
+            if index == 0:
+
+                # Take first frame of trajectory
+                frame_1 = tau[0]
+
+                walls = frame_1[..., 0]
+                player = frame_1[..., 1]
+                goal1 = frame_1[..., 2]
+                goal2 = frame_1[..., 3]
+                goal3 = frame_1[..., 4]
+                goal4 = frame_1[..., 5]
+
+                fig, ax = plt.subplot_mosaic([
+                    ["walls", "player"], ["goal 1", "goal 2"], ["goal 3", "goal 4"]
+                ], constrained_layout=True, figsize=(16, 7))
+
                 # Draw walls
-                plt.figure()
-                plt.title("Walls")
-                plt.imshow(tau[0][:][:][0])
-                plt.show()
+                ax["walls"].set_title("Walls")
+                ax["walls"].imshow(walls)
 
                 # Draw Player
-                plt.figure()
-                plt.title("Player")
-                plt.imshow(tau[0][:][:][1])
-                plt.show()
+                ax["player"].set_title("Player")
+                ax["player"].imshow(player)
 
                 # Draw Goal 1
-                plt.figure()
-                plt.title("Goal 1")
-                plt.imshow(tau[0][:][:][2])
-                plt.show()
+                ax["goal 1"].set_title("Goal 1")
+                ax["goal 1"].imshow(goal1)
 
                 # Draw Goal 2
-                plt.figure()
-                plt.title("Goal 2")
-                plt.imshow(tau[0][:][:][3])
-                plt.show()
+                ax["goal 2"].set_title("Goal 2")
+                ax["goal 2"].imshow(goal2)
 
                 # Draw Goal 3
-                plt.figure()
-                plt.title("Goal 3")
-                plt.imshow(tau[0][:][:][4])
-                plt.show()
+                ax["goal 3"].set_title("Goal 3")
+                ax["goal 3"].imshow(goal3)
 
                 # Draw Goal 4
-                plt.figure()
-                plt.title("Goal 4")
-                plt.imshow(tau[0][:][:][5])
+                ax["goal 4"].set_title("Goal 4")
+                ax["goal 4"].imshow(goal4)
+
                 plt.show()
 
-        print("Trajectory validation... ")
+
 
     def current_validation(self, traj):
         print("Current state validation... ")
