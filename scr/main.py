@@ -88,7 +88,7 @@ if __name__ == "__main__":
     train_goal, test_goal, valid_goal, \
     train_act, test_act, valid_act = \
         data_handler.load_all_games(directory=path_exper_1,
-                                    use_percentage=0.1)
+                                    use_percentage=1)
 
     Data = {"train_traj":train_traj,
             "test_traj":test_traj,

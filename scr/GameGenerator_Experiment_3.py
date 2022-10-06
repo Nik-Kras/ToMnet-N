@@ -6,7 +6,7 @@ ROWS = 12
 COLS = 12
 SIGHT = 24
 
-for i in range(1000):
+for i in range(4000):
 
     env = Environment.GridWorld(tot_row=ROWS, tot_col=COLS, consume_goals=1, shaffle=False)
     env.reset()
