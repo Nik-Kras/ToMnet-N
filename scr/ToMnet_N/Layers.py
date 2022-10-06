@@ -29,7 +29,9 @@ class CustomCnn(keras.layers.Layer):
                                   kernel_size=(3, 3),
                                   strides=(1, 1),
                                   activation=activation,
-                                  padding="same")
+                                  padding="same",
+                                  # kernel_regularizer = keras.regularizers.l2(0.01), bias_regularizer = keras.regularizers.l2(0.01)
+                                  )
         else:
           self.conv = tf.keras.layers.Conv2D(filters=filters,
                                   kernel_size=(3, 3),
@@ -67,7 +69,7 @@ class ResBlock(keras.layers.Layer):
     def __init__(self, UseTimeWrapper=False):
         super(ResBlock, self).__init__()
         if UseTimeWrapper:
-            self.conv1 = CustomCnnCharNet(activation="relu")
+            self.conv1 = CustomCnnCharNet()
             # Use Batch Normalisation and then Relu activation in future!
             self.conv2 = CustomCnnCharNet(activation="linear")
             # Use Batch Normalisation in future!
@@ -76,11 +78,17 @@ class ResBlock(keras.layers.Layer):
             # Use Batch Normalisation and then Relu activation in future!
             self.conv2 = CustomCnnPredNet(activation="linear")
             # Use Batch Normalisation in future!
+        self.bn1 = tf.keras.layers.BatchNormalization()
+        self.bn2 = tf.keras.layers.BatchNormalization()
+        self.relu_conv = tf.keras.layers.Activation('relu')
         self.UseTimeWrapper = UseTimeWrapper
 
     def call(self, inputs):
         x = self.conv1(inputs)
+        x = self.bn1(x)
+        x = self.relu_conv(x)
         x = self.conv2(x)
+        x = self.bn2(x)
         x = tf.nn.relu(x + inputs)
         return x
 

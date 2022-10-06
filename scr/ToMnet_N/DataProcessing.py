@@ -15,6 +15,7 @@ Note:
 The data stored like: 1x12x12x10. 1 - Time Step, 12x12 - Map Resolution, 10 - Depth (1 walls, 1 player, 4 goals, 4 actions)
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 from random import shuffle
 import re
@@ -111,3 +112,90 @@ class DataProcessor:
 
         print("Concatenation is finished")
         return UniData
+
+    def validate_data(self, DictData):
+
+        """
+        Data = {"train_traj":train_traj,
+                "test_traj":test_traj,
+                "valid_traj":valid_traj,
+                "train_current":train_current,
+                "test_current":train_current,
+                "valid_current":valid_current,
+                "train_goal": train_goal,
+                "test_goal": test_goal,
+                "valid_goal": valid_goal,
+                "train_act": train_act,
+                "test_act": test_act,
+                "valid_act": valid_act}
+        """
+
+        print("----")
+        print("Data validation... ")
+
+        for key, value in DictData.items():
+
+            if key[-len("traj"):] == "traj":
+                self.trajectory_validation(value)
+            elif key[-len("current"):] == "current":
+                self.current_validation(value)
+            elif key[-len("goal"):] == "goal":
+                self.goal_validation(value)
+            elif key[-len("act"):] == "act":
+                self.act_validation(value)
+            else:
+                raise ValueError("Wrong key inside Data dictionary!")
+
+        print("----")
+
+
+    def trajectory_validation(self, traj):
+
+        for index, tau in enumerate(traj):
+            if index == 1:
+                # Draw walls
+                plt.figure()
+                plt.title("Walls")
+                plt.imshow(tau[0][:][:][0])
+                plt.show()
+
+                # Draw Player
+                plt.figure()
+                plt.title("Player")
+                plt.imshow(tau[0][:][:][1])
+                plt.show()
+
+                # Draw Goal 1
+                plt.figure()
+                plt.title("Goal 1")
+                plt.imshow(tau[0][:][:][2])
+                plt.show()
+
+                # Draw Goal 2
+                plt.figure()
+                plt.title("Goal 2")
+                plt.imshow(tau[0][:][:][3])
+                plt.show()
+
+                # Draw Goal 3
+                plt.figure()
+                plt.title("Goal 3")
+                plt.imshow(tau[0][:][:][4])
+                plt.show()
+
+                # Draw Goal 4
+                plt.figure()
+                plt.title("Goal 4")
+                plt.imshow(tau[0][:][:][5])
+                plt.show()
+
+        print("Trajectory validation... ")
+
+    def current_validation(self, traj):
+        print("Current state validation... ")
+
+    def goal_validation(self, traj):
+        print("Goal validation... ")
+
+    def act_validation(self, traj):
+        print("Action validation... ")

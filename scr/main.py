@@ -84,7 +84,7 @@ if __name__ == "__main__":
     train_goal, test_goal, valid_goal, \
     train_act, test_act, valid_act = \
         data_handler.load_all_games(directory=path_exper_1,
-                                    use_percentage=0.25)
+                                    use_percentage=1)
 
     Data = {"train_traj":train_traj,
             "test_traj":test_traj,
@@ -107,6 +107,8 @@ if __name__ == "__main__":
                                                   h = COL,
                                                   d = DEPTH)
 
+    # data_processor.validate_data(Data)
+
     Data = data_processor.zero_padding(max_elements= MAX_TRAJ,
                                               DictData=Data)
 
@@ -128,7 +130,7 @@ if __name__ == "__main__":
                       h = COL,
                       d = DEPTH)
     t.compile(loss='categorical_crossentropy',
-              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00005), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001), # tf.keras.optimizers.Adam(learning_rate=0.0001)
               metrics=['accuracy'])
 
     # --------------------------------------------------------

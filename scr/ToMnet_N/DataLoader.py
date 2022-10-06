@@ -127,10 +127,6 @@ class DataHandler:
 
         print("----")
 
-        # ------------------------------------------------------------------
-        # Zero-Padding???
-        # ------------------------------------------------------------------
-
         return train_traj, test_traj, valid_traj, \
                train_current, test_current, valid_current, \
                train_goal, test_goal, valid_goal, \
