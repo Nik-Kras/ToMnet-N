@@ -89,11 +89,14 @@ class DataProcessor:
                     else:
                         zero_pad_trajectory[:Nt, ...] = current_trajectory
 
-                    if key == "train_traj":
-                        actions = DictData["train_act"]
+                    if key == "valid_traj":
+                        actions = DictData["valid_act"]
                         ac = actions[i] # Getting an action TOMnet must predict
                         print("Next Action should be: ", ac)
-                    self.one_trajectory_validation(zero_pad_trajectory)
+                        self.one_trajectory_validation(zero_pad_trajectory)
+                        cur_states = DictData["valid_current"]
+                        cur_state = cur_states[i]
+                        self.current_validation(cur_state)
                     TrajZeroPad.append(zero_pad_trajectory)
 
                 DataZeroPad[key] = TrajZeroPad
@@ -308,8 +311,34 @@ class DataProcessor:
 
 
 
-    def current_validation(self, traj):
+    def current_validation(self, cur):
         print("Current state validation... ")
+
+        to_draw = {
+            "walls": cur[..., 0],
+            "player": cur[..., 1],
+            "walls2": cur[..., 0],
+            "player2": cur[..., 1],
+            "goal1": cur[..., 2],
+            "goal2": cur[..., 3],
+            "goal3": cur[..., 4],
+            "goal4": cur[..., 5],
+        }
+
+        ROW = 2
+        COL = 4
+        fig, axs = plt.subplots(ROW, COL, figsize=(7, 6))
+        row = 0
+        col = 0
+        for key, value in to_draw.items():
+            axs[row, col].imshow(value)
+            axs[row, col].set_title(key + ":: Current State")
+            axs[row, col].axis("off")
+            col = col + 1
+            if col == COL:
+                col = 0
+                row = row + 1
+        plt.show()
 
     def goal_validation(self, traj):
         print("Goal validation... ")
