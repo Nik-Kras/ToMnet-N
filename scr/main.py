@@ -63,98 +63,104 @@ if __name__ == "__main__":
     DEPTH = 10
     MAX_TRAJ = 15
 
-    # --------------------------------------------------------
-    # 1. Load Data
-    # --------------------------------------------------------
-    data_handler = DataLoader.DataHandler(ts = MAX_TRAJ,
-                                          w = ROW,
-                                          h = COL,
-                                          d = DEPTH)
+    for i in range(4):
+        # --------------------------------------------------------
+        # 1. Load Data
+        # --------------------------------------------------------
+        data_handler = DataLoader.DataHandler(ts = MAX_TRAJ,
+                                              w = ROW,
+                                              h = COL,
+                                              d = DEPTH)
 
-    path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Experiment 3')
+        path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Experiment 3')
 
-    # Load 4 types of data for 3 purposes
-    # Purpose:
-    #   - Training
-    #   - Testing
-    #   - Validating
-    # Data:
-    #   - Trajectory (from 5 to MAX_TRAJ-1 steps)
-    #   - Current state (map at the end of Trajectory)
-    #   - Goal eaten by the end of the game (for preference prediction)
-    #   - Next action from Current position (for action prediction)
-    train_traj, test_traj, valid_traj, \
-    train_current, test_current, valid_current, \
-    train_goal, test_goal, valid_goal, \
-    train_act, test_act, valid_act = \
-        data_handler.load_all_games(directory=path_exper_1,
-                                    use_percentage=1)
+        # Load 4 types of data for 3 purposes
+        # Purpose:
+        #   - Training
+        #   - Testing
+        #   - Validating
+        # Data:
+        #   - Trajectory (from 5 to MAX_TRAJ-1 steps)
+        #   - Current state (map at the end of Trajectory)
+        #   - Goal eaten by the end of the game (for preference prediction)
+        #   - Next action from Current position (for action prediction)
+        train_traj, test_traj, valid_traj, \
+        train_current, test_current, valid_current, \
+        train_goal, test_goal, valid_goal, \
+        train_act, test_act, valid_act = \
+            data_handler.load_all_games(directory=path_exper_1,
+                                        use_percentage=0.01)
 
-    Data = {"train_traj":train_traj,
-            "test_traj":test_traj,
-            "valid_traj":valid_traj,
-            "train_current":train_current,
-            "test_current":train_current,
-            "valid_current":valid_current,
-            "train_goal": train_goal,
-            "test_goal": test_goal,
-            "valid_goal": valid_goal,
-            "train_act": train_act,
-            "test_act": test_act,
-            "valid_act": valid_act}
+        Data = {"train_traj":train_traj,
+                "test_traj":test_traj,
+                "valid_traj":valid_traj,
+                "train_current":train_current,
+                "test_current":train_current,
+                "valid_current":valid_current,
+                "train_goal": train_goal,
+                "test_goal": test_goal,
+                "valid_goal": valid_goal,
+                "train_act": train_act,
+                "test_act": test_act,
+                "valid_act": valid_act}
 
-    # --------------------------------------------------------
-    # 2. Pre-process data - Zero Padding
-    # --------------------------------------------------------
-    data_processor = DataProcessing.DataProcessor(ts = MAX_TRAJ,
-                                                  w = ROW,
-                                                  h = COL,
-                                                  d = DEPTH)
+        # --------------------------------------------------------
+        # 2. Pre-process data - Zero Padding
+        # --------------------------------------------------------
+        data_processor = DataProcessing.DataProcessor(ts = MAX_TRAJ,
+                                                      w = ROW,
+                                                      h = COL,
+                                                      d = DEPTH)
 
-    data_processor.validate_data(Data)
+        # data_processor.validate_data(Data)
 
-    Data = data_processor.zero_padding(max_elements= MAX_TRAJ,
-                                              DictData=Data)
+        Data = data_processor.zero_padding(max_elements= MAX_TRAJ,
+                                                  DictData=Data)
 
-    DataProcessed = data_processor.unite_traj_current(Data)
+        DataProcessed = data_processor.unite_traj_current(Data)
 
-    # Make Tensors from List
-    X_Train, X_Test, X_Valid, \
-    Y_goal_Train, Y_goal_Test, Y_goal_Valid, \
-    Y_act_Train, Y_act_Test, Y_act_Valid = dict_to_tensors(DataProcessed)
+        # Make Tensors from List
+        X_Train, X_Test, X_Valid, \
+        Y_goal_Train, Y_goal_Test, Y_goal_Valid, \
+        Y_act_Train, Y_act_Test, Y_act_Valid = dict_to_tensors(DataProcessed)
 
-    # --------------------------------------------------------
-    # 3. Create and set the model
-    # --------------------------------------------------------
-    print("----")
-    print("Create a model")
-    t = ToMnet.ToMnet(ts = MAX_TRAJ,
-                      w = ROW,
-                      h = COL,
-                      d = DEPTH)
-    t.compile(loss='categorical_crossentropy',
-              optimizer=tf.keras.optimizers.Adam(learning_rate=0.00002), # tf.keras.optimizers.Adam(learning_rate=0.0001)
-              metrics=['accuracy'])
+        # --------------------------------------------------------
+        # 3. Create and set the model
+        # --------------------------------------------------------
+        print("----")
+        print("Create a model")
+        t = ToMnet.ToMnet(ts = MAX_TRAJ,
+                          w = ROW,
+                          h = COL,
+                          d = DEPTH)
+        t.compile(loss='categorical_crossentropy',
+                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.00002), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+                  metrics=['accuracy'])
 
-    # --------------------------------------------------------
-    # 4. Train the model
-    # --------------------------------------------------------
-    print("Train a Model")
-    t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-          epochs=25, batch_size=16, verbose=2)
+        t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
+              epochs=1, batch_size=16, verbose=2)
 
-    # --------------------------------------------------------
-    # 5. Evaluate the model
-    # --------------------------------------------------------
-    _, accuracy = t.evaluate(x=X_Test, y=Y_act_Test)
-    print('Accuracy: %.2f' % (accuracy * 100))
+        t.summary()
 
-    # print(X_Test[0])
-    # print(t.predict(X_Test[0]))
+        # --------------------------------------------------------
+        # 4. Train the model
+        # --------------------------------------------------------
+        print("Train a Model")
+        t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
+              epochs=25, batch_size=16, verbose=2)
 
-    # --------------------------------------------------------
-    # 6. Save the model
-    # --------------------------------------------------------
+        # --------------------------------------------------------
+        # 5. Evaluate the model
+        # --------------------------------------------------------
+        _, accuracy = t.evaluate(x=X_Test, y=Y_act_Test)
+        print('Accuracy: %.2f' % (accuracy * 100))
+
+        # print(X_Test[0])
+        # print(t.predict(X_Test[0]))
+
+        # --------------------------------------------------------
+        # 6. Save the model
+        # --------------------------------------------------------
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")

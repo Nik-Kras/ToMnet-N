@@ -51,7 +51,7 @@ class PredNet(keras.layers.Layer):
         self.conv_2 = CustomCnnPredNet(activation='relu')
         self.fc = Dense(units=60, activation=activations.relu)
         # drop_out_1 = Dropout(rate = 0.2) ### Could be added in the future
-        self.goal_predict = Dense(units=4, activation=activations.linear)
+        self.goal_predict = Dense(units=4, activation=activations.softmax)
 
     def call(self, inputs):
         """
@@ -66,20 +66,23 @@ class PredNet(keras.layers.Layer):
 
         # --------------------------------------------------------------
         # Paper codes
-        # (16, 13, 12, 8) -> (16, 12, 12, 6) + (16, 8)
+        # (16, 13, 12, 8) -> (16, 12, 12, 6) + (16, 8)  # OLD Version
+        # (16, 12, 12, 7)
         # Decompose input data
         # Initially in is a mix of Current State and e_char embedding space
         # --------------------------------------------------------------
-        input_current_state = inputs[..., 0:12, 0:12, 0:6]
-        e_char = inputs[..., 12, 0, :]
+        # input_current_state = inputs[..., 0:12, 0:12, 0:6]
+        # e_char = inputs[..., 12, 0, :]
 
         # --------------------------------------------------------------
         # Paper codes
         # (16, 12, 12, 6) -> (16, 12, 12, 32)
+        # (16, 12, 12, 7) -> (16, 12, 12, 32)
         # Use 3x3 conv layer to shape the depth to 32
         # to enable resnet to work (addition between main path and residual connection)
         # --------------------------------------------------------------
-        x = self.conv_1(input_current_state)
+        # x = self.conv_1(input_current_state)
+        x = self.conv_1(inputs)
 
         # --------------------------------------------------------------
         # Paper codes
@@ -114,11 +117,11 @@ class PredNet(keras.layers.Layer):
         # Concatenate tensor with e_char
         # Concatenation requires a common dimentions which cannot be a batch
         # --------------------------------------------------------------
-        x = tf.expand_dims(x, axis=-1)
-        e_char = tf.expand_dims(e_char, axis=-1)
-
-        x = tf.keras.layers.Concatenate(axis=1)([x, e_char])
-        x = x[..., 0]
+        # x = tf.expand_dims(x, axis=-1)
+        # e_char = tf.expand_dims(e_char, axis=-1)
+        #
+        # x = tf.keras.layers.Concatenate(axis=1)([x, e_char])
+        # x = x[..., 0]
 
         # --------------------------------------------------------------
         # Paper codes

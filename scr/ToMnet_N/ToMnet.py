@@ -56,22 +56,24 @@ class ToMnet(Model):
         # --------------------------------------------------------------
         # Paper codes
         # (16, 12, 12, 6) + (16, 8) ->
-        # (16, 12, 12, 8) + (16, 1, 12, 8) -> (16, 13, 12, 8)
+        # (16, 12, 12, 6) + (16, 8+4zero, 12repeat, 1) ->
+        # (16, 12, 12, 7)   # NEW VERSION
+        # (16, 12, 12, 8) + (16, 1, 12, 8) -> (16, 13, 12, 8)   # OLD VERSION
         # Spatialise and unite different data into one tensor
         # They are automatically decompose in the Pred Net to different data
         # --------------------------------------------------------------
-        input_current_state = tf.repeat(input_current_state, repeats=2, axis=-1)
-        input_current_state = input_current_state[..., 0:8]
-        print("input_current_state: ", input_current_state.shape)
+        e_char_new = tf.repeat(e_char, repeats=2, axis=-1)
+        e_char_new = e_char_new[..., 0:12]
 
-        e_char = tf.expand_dims(e_char, axis=1)
-        print("e_char: ", e_char.shape)
-        e_char = tf.expand_dims(e_char, axis=1)
-        print("e_char: ", e_char.shape)
-        e_char = tf.repeat(e_char, repeats=12, axis=2)
-        print("e_char: ", e_char.shape)
+        print("e_char_new: ", e_char_new.shape)
+        e_char_new = tf.expand_dims(e_char_new, axis=-1)
+        print("e_char_new: ", e_char_new.shape)
+        e_char_new = tf.repeat(e_char_new, repeats=12, axis=-1)
+        print("e_char_new: ", e_char_new.shape)
+        e_char_new = tf.expand_dims(e_char_new, axis=-1)
+        print("e_char_new: ", e_char_new.shape)
 
-        mix_data = tf.keras.layers.Concatenate(axis=1)([input_current_state, e_char])
+        mix_data = tf.keras.layers.Concatenate(axis=-1)([input_current_state, e_char_new])
 
         print("pred input: ", mix_data.shape)
 
