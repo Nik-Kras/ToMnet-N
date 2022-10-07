@@ -142,7 +142,7 @@ if __name__ == "__main__":
                           h = COL,
                           d = DEPTH)
         t.compile(loss='categorical_crossentropy',
-                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+                  optimizer=tf.keras.optimizers.Adam(), # tf.keras.optimizers.Adam(learning_rate=0.0001)
                   metrics=['accuracy'])
 
         # t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         # --------------------------------------------------------
         print("Train a Model")
         history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-              epochs=10, batch_size=16, verbose=2)
+              epochs=50, batch_size=16, verbose=2)
 
         # --------------------------------------------------------
         # 5. Evaluate the model

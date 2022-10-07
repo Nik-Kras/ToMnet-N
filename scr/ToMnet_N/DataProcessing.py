@@ -87,7 +87,9 @@ class DataProcessor:
                     if Nt > max_elements:
                         zero_pad_trajectory = current_trajectory[-max_elements:]
                     else:
-                        zero_pad_trajectory[-Nt:, ...] = current_trajectory
+                        zero_pad_trajectory[:Nt, ...] = current_trajectory
+
+                    self.one_trajectory_validation(zero_pad_trajectory)
                     TrajZeroPad.append(zero_pad_trajectory)
 
                 DataZeroPad[key] = TrajZeroPad
@@ -180,6 +182,54 @@ class DataProcessor:
                 raise ValueError("Wrong key inside Data dictionary!")
 
         print("----")
+
+    def one_trajectory_validation(self, traj):
+
+        for i in range(len(traj)):
+            # Take i-th frame of trajectory
+            frame_1 = traj[i]
+
+            walls = frame_1[..., 0]
+            player = frame_1[..., 1]
+            goal1 = frame_1[..., 2]
+            goal2 = frame_1[..., 3]
+            goal3 = frame_1[..., 4]
+            goal4 = frame_1[..., 5]
+            act1 = frame_1[..., 6]
+            act2 = frame_1[..., 7]
+            act3 = frame_1[..., 8]
+            act4 = frame_1[..., 9]
+
+            to_draw = {
+                "walls": walls,
+                "player": player,
+                "walls2": walls,
+                "player2": player,
+                "goal1": goal1,
+                "goal2": goal2,
+                "goal3": goal3,
+                "goal4": goal4,
+                "act1(UP)": act1,
+                "act2(RIGHT)": act2,
+                "act3(DOWN)": act3,
+                "act4(LEFT)": act4
+            }
+
+            ROW = 3
+            COL = 4
+            fig, axs = plt.subplots(ROW, COL, figsize=(7, 6))
+            row = 0
+            col = 0
+            for key, value in to_draw.items():
+                axs[row, col].imshow(value)
+                axs[row, col].set_title(key + "::" + str(i))
+                axs[row, col].axis("off")
+                col = col + 1
+                if col == COL:
+                    col = 0
+                    row = row + 1
+            plt.show()
+
 
 
     def trajectory_validation(self, traj):
