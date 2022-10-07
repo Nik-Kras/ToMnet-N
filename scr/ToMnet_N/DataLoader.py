@@ -17,6 +17,7 @@ The data stored like: 1x12x12x10. 1 - Time Step, 12x12 - Map Resolution, 10 - De
 
 import os
 import sys
+import random
 import numpy as np
 from random import shuffle
 import re
@@ -131,6 +132,39 @@ class DataHandler:
                train_current, test_current, valid_current, \
                train_goal, test_goal, valid_goal, \
                train_act,  test_act,  valid_act
+
+    def load_one_game(self, directory):
+
+        files = os.listdir(directory)
+        r = re.compile(".*.txt")
+        files = list(filter(r.match, files))
+
+        # Load the game with min 10 steps
+        traj = []
+        act = []
+        goal = []
+        game_length = 0
+        while game_length < 10:
+            one_game = random.choice(files)
+            filename = os.path.join(directory, one_game)
+            traj, act, goal = self.read_one_game(filename)
+            game_length = traj.shape[0]
+
+        traj_history, current_state_history, actions_history, _ = self.generate_data_from_game(traj, act, goal)
+
+        single_game = {
+            "traj": traj,   # Original trajectory
+            "act": act,
+            "goal": goal,
+            "ToM":
+                {
+                    "traj_history": traj_history,   # Sequence of trajectories for ToMnet predictions. NO ZERO PADDING HERE!
+                    "current_state_history": current_state_history,
+                    "actions_history": actions_history
+                }
+        }
+
+        return single_game
 
     # Returns trajectory, actions and consumed goal
     # For a single game

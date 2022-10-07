@@ -37,6 +37,32 @@ class DataProcessor:
         self.TRAJ_LENGTH = self.CONSUMED_GOAL + 1
         self.TRAJ_START = self.TRAJ_LENGTH + 1
 
+    def zero_pad_single_game(self, max_elements, single_game):
+
+        # A single game has several trajectories
+        all_trajectories = single_game["ToM"]["traj_history"]
+        N = len(all_trajectories)
+        TrajZeroPad = []
+
+        for i in range(N):
+            zero_pad_trajectory = np.zeros(shape=(max_elements,
+                                        self.MAZE_WIDTH,
+                                        self.MAZE_HEIGHT,
+                                        self.MAZE_DEPTH))
+            current_trajectory = all_trajectories[i]
+            Nt = len(current_trajectory)  # Number of real steps in the current trajectory
+            if Nt > max_elements:
+                zero_pad_trajectory = current_trajectory[-max_elements:]
+            else:
+                zero_pad_trajectory[-Nt:, ...] = current_trajectory
+            TrajZeroPad.append(zero_pad_trajectory)
+            print("h")
+
+        single_game["input_predict"] = TrajZeroPad
+
+        return single_game
+
+
     # It adds zeros at the beginning of the trajectories
     def zero_padding(self, max_elements, DictData):
 
@@ -46,20 +72,25 @@ class DataProcessor:
 
             if key[-len("traj"):] == "traj":
                 print("Apply Zero-Padding to " + key + "... ")
-                N = len(DictData[key])
-                # Make a uni-shape trajectories of max size 20x12x12x10
-                DataZeroPad[key] = [np.zeros(shape=(max_elements,
-                                                     self.MAZE_WIDTH,
-                                                     self.MAZE_HEIGHT,
-                                                     self.MAZE_DEPTH))] * N
+                all_trajectories = DictData[key]
+                N = len(all_trajectories)
+                TrajZeroPad = []
 
                 # Fill the last elements with real trajectory (implement pre-zero padding)
                 for i in range(N):
+                    zero_pad_trajectory = np.zeros(shape=(max_elements,
+                                                          self.MAZE_WIDTH,
+                                                          self.MAZE_HEIGHT,
+                                                          self.MAZE_DEPTH))
+                    current_trajectory = all_trajectories[i]
                     Nt =  len(DictData[key][i]) # Number of real steps in the trajectory
                     if Nt > max_elements:
-                        DataZeroPad[key][i] = DictData[key][i][-max_elements:]
+                        zero_pad_trajectory = current_trajectory[-max_elements:]
                     else:
-                        DataZeroPad[key][i][-Nt:,...] = DictData[key][i]
+                        zero_pad_trajectory[-Nt:, ...] = current_trajectory
+                    TrajZeroPad.append(zero_pad_trajectory)
+
+                DataZeroPad[key] = TrajZeroPad
 
         print("Zero Padding was applied!")
 

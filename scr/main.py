@@ -49,6 +49,13 @@ def dict_to_tensors(Dict):
            Y_goal_Train, Y_goal_Test, Y_goal_Valid, \
            Y_act_Train, Y_act_Test, Y_act_Valid,
 
+def map_from_traj(traj):
+
+
+    map_1 = traj
+
+    return map_1
+
 if __name__ == "__main__":
 
     # To fix ERROR: OMP: Error #15: Initializing libiomp5, but found libiomp5md.dll already initialized.
@@ -64,7 +71,7 @@ if __name__ == "__main__":
     DEPTH = 10
     MAX_TRAJ = 15
 
-    for i in range(4):
+    for i in range(8):
         # --------------------------------------------------------
         # 1. Load Data
         # --------------------------------------------------------
@@ -156,25 +163,34 @@ if __name__ == "__main__":
         _, accuracy = t.evaluate(x=X_Test, y=Y_act_Test)
         print('Accuracy: %.2f' % (accuracy * 100))
 
-        # summarize history for accuracy
-        plt.plot(history.history['accuracy'])
-        plt.plot(history.history['val_accuracy'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
-        # summarize history for loss
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-        plt.show()
+        # # summarize history for accuracy
+        # plt.plot(history.history['accuracy'])
+        # plt.plot(history.history['val_accuracy'])
+        # plt.title('model accuracy')
+        # plt.ylabel('accuracy')
+        # plt.xlabel('epoch')
+        # plt.legend(['train', 'test'], loc='upper left')
+        # plt.show()
+        # # summarize history for loss
+        # plt.plot(history.history['loss'])
+        # plt.plot(history.history['val_loss'])
+        # plt.title('model loss')
+        # plt.ylabel('loss')
+        # plt.xlabel('epoch')
+        # plt.legend(['train', 'test'], loc='upper left')
+        # plt.show()
 
         # --------------------------------------------------------
-        # 6. Save the model
+        # 6. Predict with ToMnet-N
+        # --------------------------------------------------------
+
+        single_game = data_handler.load_one_game(path_exper_1)
+        single_game = data_processor.zero_pad_single_game(MAX_TRAJ, single_game)
+
+        init_map = map_from_traj(single_game[0])
+
+        # --------------------------------------------------------
+        # 7. Save the model
         # --------------------------------------------------------
 
     print("------------------------------------")
