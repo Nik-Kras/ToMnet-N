@@ -18,6 +18,7 @@ import pandas as pd
 import tensorflow as tf
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
 
 from ToMnet_N import ToMnet
 from ToMnet_N import DataLoader
@@ -72,7 +73,7 @@ if __name__ == "__main__":
                                               h = COL,
                                               d = DEPTH)
 
-        path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Experiment 3')
+        path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Experiment 1')
 
         # Load 4 types of data for 3 purposes
         # Purpose:
@@ -89,7 +90,7 @@ if __name__ == "__main__":
         train_goal, test_goal, valid_goal, \
         train_act, test_act, valid_act = \
             data_handler.load_all_games(directory=path_exper_1,
-                                        use_percentage=0.01)
+                                        use_percentage=0.1)
 
         Data = {"train_traj":train_traj,
                 "test_traj":test_traj,
@@ -134,20 +135,20 @@ if __name__ == "__main__":
                           h = COL,
                           d = DEPTH)
         t.compile(loss='categorical_crossentropy',
-                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.00002), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001), # tf.keras.optimizers.Adam(learning_rate=0.0001)
                   metrics=['accuracy'])
 
-        t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-              epochs=1, batch_size=16, verbose=2)
-
-        t.summary()
+        # t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
+        #       epochs=1, batch_size=16, verbose=2)
+        #
+        # t.summary()
 
         # --------------------------------------------------------
         # 4. Train the model
         # --------------------------------------------------------
         print("Train a Model")
-        t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-              epochs=25, batch_size=16, verbose=2)
+        history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
+              epochs=10, batch_size=16, verbose=2)
 
         # --------------------------------------------------------
         # 5. Evaluate the model
@@ -155,8 +156,22 @@ if __name__ == "__main__":
         _, accuracy = t.evaluate(x=X_Test, y=Y_act_Test)
         print('Accuracy: %.2f' % (accuracy * 100))
 
-        # print(X_Test[0])
-        # print(t.predict(X_Test[0]))
+        # summarize history for accuracy
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+        # summarize history for loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
 
         # --------------------------------------------------------
         # 6. Save the model

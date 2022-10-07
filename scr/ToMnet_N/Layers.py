@@ -31,8 +31,8 @@ class CustomCnn(keras.layers.Layer):
                                   activation=activation,
                                   padding="same",
                                   kernel_regularizer = keras.regularizers.l2(0.001),
-                                  bias_regularizer = keras.regularizers.l2(0.001)
-                                  )
+                                  bias_regularizer = keras.regularizers.l2(0.001),
+                                  kernel_initializer = tf.keras.initializers.HeNormal())
         else:
           self.conv = tf.keras.layers.Conv2D(filters=filters,
                                   kernel_size=(3, 3),
@@ -41,8 +41,9 @@ class CustomCnn(keras.layers.Layer):
                                   padding="same",
                                   input_shape=input_tensor,
                                   kernel_regularizer = keras.regularizers.l2(0.001),
-                                  bias_regularizer = keras.regularizers.l2(0.001)
-                                  )
+                                  bias_regularizer = keras.regularizers.l2(0.001),
+                                  kernel_initializer = tf.keras.initializers.HeNormal())
+
         if UseTimeWrapper: self.conv_handler = tf.keras.layers.TimeDistributed(self.conv)
         self.UseTimeWrapper = UseTimeWrapper
 
@@ -73,12 +74,12 @@ class ResBlock(keras.layers.Layer):
     def __init__(self, UseTimeWrapper=False):
         super(ResBlock, self).__init__()
         if UseTimeWrapper:
-            self.conv1 = CustomCnnCharNet()
+            self.conv1 = CustomCnnCharNet(activation="linear")
             # Use Batch Normalisation and then Relu activation in future!
             self.conv2 = CustomCnnCharNet(activation="linear")
             # Use Batch Normalisation in future!
         else:
-            self.conv1 = CustomCnnPredNet(activation="relu")
+            self.conv1 = CustomCnnPredNet(activation="linear")
             # Use Batch Normalisation and then Relu activation in future!
             self.conv2 = CustomCnnPredNet(activation="linear")
             # Use Batch Normalisation in future!
