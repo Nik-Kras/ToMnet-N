@@ -141,7 +141,7 @@ if __name__ == "__main__":
     # --------------------------------------------------------
     print("Train a Model")
     t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-          epochs=10, batch_size=16, verbose=2)
+          epochs=25, batch_size=16, verbose=2)
 
     # --------------------------------------------------------
     # 5. Evaluate the model
