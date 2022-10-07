@@ -89,6 +89,10 @@ class DataProcessor:
                     else:
                         zero_pad_trajectory[:Nt, ...] = current_trajectory
 
+                    if key == "train_traj":
+                        actions = DictData["train_act"]
+                        ac = actions[i] # Getting an action TOMnet must predict
+                        print("Next Action should be: ", ac)
                     self.one_trajectory_validation(zero_pad_trajectory)
                     TrajZeroPad.append(zero_pad_trajectory)
 
@@ -229,8 +233,6 @@ class DataProcessor:
                     col = 0
                     row = row + 1
             plt.show()
-
-
 
     def trajectory_validation(self, traj):
         print("Trajectory validation... ")
