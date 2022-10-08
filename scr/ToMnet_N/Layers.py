@@ -119,14 +119,12 @@ class CustomLSTM(keras.layers.Layer):
     self.output_keep_prob = output_keep_prob
     self.lstm = LSTM(units=num_hidden,
                     activation = activations.tanh,
-                    recurrent_activation = activations.sigmoid,
-                    recurrent_dropout = output_keep_prob,
-                    dropout = output_keep_prob)
+                    recurrent_activation = activations.sigmoid)
     self.bn = BatchNormalization()
 
   def call(self, inputs):
     x = self.lstm(inputs)
-    x = self.bn(x)
+    # x = self.bn(x)
     return x
 
   def get_config(self):

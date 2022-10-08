@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     Accuracies = []
     TrainingAccuracy = pd.DataFrame()
-    for i in range(12):
+    for i in range(1):
         # --------------------------------------------------------
         # 1. Load Data
         # --------------------------------------------------------
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         train_goal, test_goal, valid_goal, \
         train_act, test_act, valid_act = \
             data_handler.load_all_games(directory=path_exper_1,
-                                        use_percentage=0.1)
+                                        use_percentage=0.25)
 
         Data = {"train_traj":train_traj,
                 "test_traj":test_traj,
@@ -144,7 +144,7 @@ if __name__ == "__main__":
                           h = COL,
                           d = DEPTH)
         t.compile(loss='categorical_crossentropy',
-                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+                  optimizer=tf.keras.optimizers.Adam(), # tf.keras.optimizers.Adam(learning_rate=0.0001)
                   metrics=['accuracy'])
 
         # t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
@@ -156,11 +156,50 @@ if __name__ == "__main__":
         # 4. Train the model
         # --------------------------------------------------------
         print("Train a Model")
+        Amplitude = 4.663 / 100000000
+        Tau = 33
+        N_EPOCHS = 100
         history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-              epochs=25, batch_size=16, verbose=2)
+              epochs=N_EPOCHS, batch_size=16, verbose=2,
+                        callbacks=[
+                            tf.keras.callbacks.LearningRateScheduler(
+                                lambda epoch: Amplitude * 10 ** (epoch / Tau)
+                            )
+                        ]
+                        )
 
         TrainingAccuracy = TrainingAccuracy.append(pd.DataFrame({str(i): history.history["accuracy"]}))
         print("TrainingAccuracy", TrainingAccuracy)
+
+        plt.plot(
+            np.arange(1, N_EPOCHS+1),
+            history.history['loss'],
+            label='Loss', lw=3
+        )
+        plt.plot(
+            np.arange(1, N_EPOCHS+1),
+            history.history['val_accuracy'],
+            label='Accuracy', lw=3
+        )
+        plt.plot(
+            np.arange(1, N_EPOCHS+1),
+            history.history['val_loss'],
+            label='Loss', lw=3
+        )
+        plt.plot(
+            np.arange(1, N_EPOCHS+1),
+            history.history['accuracy'],
+            label='Accuracy', lw=3
+        )
+        plt.plot(
+            np.arange(1, N_EPOCHS+1),
+            history.history['lr'],
+            label='Learning rate', color='#000', lw=3, linestyle='--'
+        )
+        plt.title('Evaluation metrics', size=20)
+        plt.xlabel('Epoch', size=14)
+        plt.legend()
+        plt.show()
 
         # --------------------------------------------------------
         # 5. Evaluate the model
@@ -199,8 +238,6 @@ if __name__ == "__main__":
         # 7. Save the model
         # --------------------------------------------------------
 
-    plt.plot(TrainingAccuracy)
-    plt.show()
 
     TrainingAccuracy.to_csv('TrainingAccuracy.csv')
 
