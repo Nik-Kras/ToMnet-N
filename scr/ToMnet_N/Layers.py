@@ -32,7 +32,7 @@ class CustomCnn(keras.layers.Layer):
                                   padding="same",
                                   kernel_regularizer = keras.regularizers.l2(0.001),
                                   bias_regularizer = keras.regularizers.l2(0.001),
-                                  #kernel_initializer = tf.keras.initializers.HeNormal()
+                                  kernel_initializer = tf.keras.initializers.HeNormal()
                                              )
         else:
           self.conv = tf.keras.layers.Conv2D(filters=filters,
@@ -43,7 +43,7 @@ class CustomCnn(keras.layers.Layer):
                                   input_shape=input_tensor,
                                   kernel_regularizer = keras.regularizers.l2(0.001),
                                   bias_regularizer = keras.regularizers.l2(0.001),
-                                  #kernel_initializer = tf.keras.initializers.HeNormal()
+                                  kernel_initializer = tf.keras.initializers.HeNormal()
                                              )
 
         if UseTimeWrapper: self.conv_handler = tf.keras.layers.TimeDistributed(self.conv)

@@ -71,7 +71,9 @@ if __name__ == "__main__":
     DEPTH = 10
     MAX_TRAJ = 15
 
-    for i in range(8):
+    Accuracies = []
+    TrainingAccuracy = pd.DataFrame()
+    for i in range(12):
         # --------------------------------------------------------
         # 1. Load Data
         # --------------------------------------------------------
@@ -142,7 +144,7 @@ if __name__ == "__main__":
                           h = COL,
                           d = DEPTH)
         t.compile(loss='categorical_crossentropy',
-                  optimizer=tf.keras.optimizers.Adam(), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), # tf.keras.optimizers.Adam(learning_rate=0.0001)
                   metrics=['accuracy'])
 
         # t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
@@ -155,13 +157,18 @@ if __name__ == "__main__":
         # --------------------------------------------------------
         print("Train a Model")
         history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-              epochs=50, batch_size=16, verbose=2)
+              epochs=25, batch_size=16, verbose=2)
+
+        TrainingAccuracy = TrainingAccuracy.append(pd.DataFrame({str(i): history.history["accuracy"]}))
+        print("TrainingAccuracy", TrainingAccuracy)
 
         # --------------------------------------------------------
         # 5. Evaluate the model
         # --------------------------------------------------------
         _, accuracy = t.evaluate(x=X_Test, y=Y_act_Test)
         print('Accuracy: %.2f' % (accuracy * 100))
+
+        Accuracies.append(accuracy * 100)
 
         # # summarize history for accuracy
         # plt.plot(history.history['accuracy'])
@@ -184,14 +191,20 @@ if __name__ == "__main__":
         # 6. Predict with ToMnet-N
         # --------------------------------------------------------
 
-        single_game = data_handler.load_one_game(path_exper_1)
-        single_game = data_processor.zero_pad_single_game(MAX_TRAJ, single_game)
-
-        init_map = map_from_traj(single_game[0])
+        # single_game = data_handler.load_one_game(path_exper_1)
+        # single_game = data_processor.zero_pad_single_game(MAX_TRAJ, single_game)
+        # init_map = map_from_traj(single_game[0])
 
         # --------------------------------------------------------
         # 7. Save the model
         # --------------------------------------------------------
+
+    plt.plot(TrainingAccuracy)
+    plt.show()
+
+    TrainingAccuracy.to_csv('TrainingAccuracy.csv')
+
+    print("Accuracies: ", Accuracies)
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")

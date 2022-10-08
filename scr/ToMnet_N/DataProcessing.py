@@ -83,20 +83,20 @@ class DataProcessor:
                                                           self.MAZE_HEIGHT,
                                                           self.MAZE_DEPTH))
                     current_trajectory = all_trajectories[i]
-                    Nt =  len(DictData[key][i]) # Number of real steps in the trajectory
+                    Nt =  len(current_trajectory) # Number of real steps in the trajectory
                     if Nt > max_elements:
                         zero_pad_trajectory = current_trajectory[-max_elements:]
                     else:
                         zero_pad_trajectory[:Nt, ...] = current_trajectory
 
-                    if key == "valid_traj":
-                        actions = DictData["valid_act"]
-                        ac = actions[i] # Getting an action TOMnet must predict
-                        print("Next Action should be: ", ac)
-                        self.one_trajectory_validation(zero_pad_trajectory)
-                        cur_states = DictData["valid_current"]
-                        cur_state = cur_states[i]
-                        self.current_validation(cur_state)
+                    # if key == "valid_traj":
+                    #     actions = DictData["valid_act"]
+                    #     ac = actions[i] # Getting an action TOMnet must predict
+                    #     print("Next Action should be: ", ac)
+                    #     self.one_trajectory_validation(zero_pad_trajectory)
+                    #     cur_states = DictData["valid_current"]
+                    #     cur_state = cur_states[i]
+                    #     self.current_validation(cur_state)
                     TrajZeroPad.append(zero_pad_trajectory)
 
                 DataZeroPad[key] = TrajZeroPad
