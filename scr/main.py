@@ -73,6 +73,7 @@ if __name__ == "__main__":
 
     Accuracies = []
     TrainingAccuracy = pd.DataFrame()
+    TrainHistory = pd.DataFrame()
     for i in range(1):
         # --------------------------------------------------------
         # 1. Load Data
@@ -99,7 +100,7 @@ if __name__ == "__main__":
         train_goal, test_goal, valid_goal, \
         train_act, test_act, valid_act = \
             data_handler.load_all_games(directory=path_exper_1,
-                                        use_percentage=0.25)
+                                        use_percentage=0.5)
 
         Data = {"train_traj":train_traj,
                 "test_traj":test_traj,
@@ -156,9 +157,9 @@ if __name__ == "__main__":
         # 4. Train the model
         # --------------------------------------------------------
         print("Train a Model")
-        Amplitude = 4.663 / 100000000
-        Tau = 33
-        N_EPOCHS = 100
+        Amplitude = 5 / 100000000
+        Tau = 83.33
+        N_EPOCHS = 250
         history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
               epochs=N_EPOCHS, batch_size=16, verbose=2,
                         callbacks=[
@@ -170,6 +171,13 @@ if __name__ == "__main__":
 
         TrainingAccuracy = TrainingAccuracy.append(pd.DataFrame({str(i): history.history["accuracy"]}))
         print("TrainingAccuracy", TrainingAccuracy)
+
+        TrainHistory = TrainHistory.append(pd.DataFrame({
+            "loss": history.history['loss'],
+            "accuracy": history.history['accuracy'],
+            "val_loss": history.history['val_loss'],
+            "val_accuracy": history.history['val_accuracy'],
+        }))
 
         plt.plot(
             np.arange(1, N_EPOCHS+1),
@@ -240,6 +248,7 @@ if __name__ == "__main__":
 
 
     TrainingAccuracy.to_csv('TrainingAccuracy.csv')
+    TrainHistory.to_csv("TrainHistory_LR_Search.csv")
 
     print("Accuracies: ", Accuracies)
 
