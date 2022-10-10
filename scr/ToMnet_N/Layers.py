@@ -113,7 +113,7 @@ def ResBlockPredNet():
     return ResBlock(UseTimeWrapper=False)
 
 class CustomLSTM(keras.layers.Layer):
-  def __init__(self, num_hidden = 64, output_keep_prob = 0.02):
+  def __init__(self, num_hidden = 128, output_keep_prob = 0.02):
     super(CustomLSTM, self).__init__()
     self.num_hidden = num_hidden
     self.output_keep_prob = output_keep_prob

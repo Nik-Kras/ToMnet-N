@@ -49,7 +49,9 @@ class PredNet(keras.layers.Layer):
         for i in range(n):
           self.res_blocks[i] = ResBlockPredNet()
         self.conv_2 = CustomCnnPredNet(activation='relu')
-        self.fc = Dense(units=60, activation=activations.relu)
+        self.fc1 = Dense(units=128, activation=activations.relu)
+        self.fc2 = Dense(units=128, activation=activations.relu)
+        self.fc3 = Dense(units=64, activation=activations.relu)
         # drop_out_1 = Dropout(rate = 0.2) ### Could be added in the future
         self.goal_predict = Dense(units=4, activation=activations.softmax)
 
@@ -128,7 +130,9 @@ class PredNet(keras.layers.Layer):
         # (16, 40) -> (16, 60) -> (16, 4)
         # Fully connected layer with dropout for regularization
         # --------------------------------------------------------------
-        x = self.fc(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.fc3(x)
         x =  self.goal_predict(x)
 
         return x

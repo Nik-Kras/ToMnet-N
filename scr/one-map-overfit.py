@@ -117,9 +117,8 @@ if __name__ == "__main__":
         single_game = data_processor.unite_traj_current(single_game)
 
         # Make Tensors from List
-        X_Train, X_Test, X_Valid, \
-        Y_goal_Train, Y_goal_Test, Y_goal_Valid, \
-        Y_act_Train, Y_act_Test, Y_act_Valid = dict_to_tensors(DataProcessed)
+        X_Train = single_game["united_input"]
+        Y_act_Train = single_game["actions_history"]
 
         # --------------------------------------------------------
         # 3. Create and set the model
@@ -135,17 +134,17 @@ if __name__ == "__main__":
                   optimizer=tf.keras.optimizers.Adam(Learning_Rate), # tf.keras.optimizers.Adam(learning_rate=0.0001)
                   metrics=['accuracy'])
 
-        # t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-        #       epochs=1, batch_size=16, verbose=2)
-        #
-        # t.summary()
+        t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
+              epochs=1, batch_size=16, verbose=2)
+
+        t.summary()
 
         # --------------------------------------------------------
         # 4. Train the model
         # --------------------------------------------------------
         print("Train a Model")
         N_EPOCHS = 500
-        history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
+        history = t.fit(x=X_Train, y=Y_act_Train,
               epochs=N_EPOCHS, batch_size=16, verbose=2)
 
         TrainingAccuracy = TrainingAccuracy.append(pd.DataFrame({str(i): history.history["accuracy"]}))
@@ -168,16 +167,6 @@ if __name__ == "__main__":
         )
         plt.plot(
             np.arange(1, N_EPOCHS+1),
-            history.history['val_accuracy'],
-            label='Accuracy', lw=3
-        )
-        plt.plot(
-            np.arange(1, N_EPOCHS+1),
-            history.history['val_loss'],
-            label='Loss', lw=3
-        )
-        plt.plot(
-            np.arange(1, N_EPOCHS+1),
             history.history['accuracy'],
             label='Accuracy', lw=3
         )
@@ -186,18 +175,6 @@ if __name__ == "__main__":
         plt.xlabel('Epoch', size=14)
         plt.legend()
         plt.show()
-
-        # --------------------------------------------------------
-        # 5. Evaluate the model
-        # --------------------------------------------------------
-        _, accuracy = t.evaluate(x=X_Test, y=Y_act_Test)
-        print('Accuracy: %.2f' % (accuracy * 100))
-
-        Accuracies.append(accuracy * 100)
-
-
-
-    print("Accuracies: ", Accuracies)
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")

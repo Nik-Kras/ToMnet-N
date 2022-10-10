@@ -158,17 +158,30 @@ class DataProcessor:
     def unite_single_traj_current(self, single_game):
 
         print("Apply concatenation to a single trajectory... ")
-        # Add Trajectory in the beginning
-        purpose = key[:-(len("input") + 1)]  # train / test / valid
-        for i in range(len(DictData[purpose + "_traj"])):
-            UniData[key][i][0:self.MAX_TRAJECTORY_SIZE] = DictData[purpose + "_traj"][i]
+        trajectories_list = single_game["input_predict"]
+        current_state_list = single_game["current_state_history"]
+        assert len(trajectories_list) == len(current_state_list)
 
-        # Add Current in the end
-        for i in range(len(DictData[purpose + "_traj"])):
-            # 12x12x6 -> 12x12x10
-            data_expanded = np.repeat(DictData[purpose + "_current"][i], repeats=2, axis=-1)
-            data_expanded = data_expanded[..., 0:10]
-            UniData[key][i][self.MAX_TRAJECTORY_SIZE] = data_expanded
+        concat_shape = (self.MAX_TRAJECTORY_SIZE + 1, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH)
+        N = len(trajectories_list)
+        united_data = []
+        for i in range(N):
+
+            cur_traj = trajectories_list[i]     # 15x12x12x10
+            cur_state = current_state_list[i]   # 12x12x6
+
+            cur_state_expanded = np.repeat(cur_state, repeats=2, axis=-1)
+            cur_state_expanded = cur_state_expanded[..., 0:10] # 12x12x6 -> 12x12x10
+
+            concatenated_data = np.zeros(shape=concat_shape)
+            concatenated_data[0:self.MAX_TRAJECTORY_SIZE + 1] = cur_traj
+            concatenated_data[self.MAX_TRAJECTORY_SIZE + 1] = cur_state_expanded
+
+            united_data.append(concatenated_data)
+
+        single_game["united_input"] = united_data
+
+        return single_game
 
 
     def validate_data(self, DictData):
