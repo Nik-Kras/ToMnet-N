@@ -140,12 +140,13 @@ if __name__ == "__main__":
         # --------------------------------------------------------
         print("----")
         print("Create a model")
+        Learning_Rate = 15 / 10000000
         t = ToMnet.ToMnet(ts = MAX_TRAJ,
                           w = ROW,
                           h = COL,
                           d = DEPTH)
         t.compile(loss='categorical_crossentropy',
-                  optimizer=tf.keras.optimizers.Adam(), # tf.keras.optimizers.Adam(learning_rate=0.0001)
+                  optimizer=tf.keras.optimizers.Adam(Learning_Rate), # tf.keras.optimizers.Adam(learning_rate=0.0001)
                   metrics=['accuracy'])
 
         # t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
@@ -157,17 +158,9 @@ if __name__ == "__main__":
         # 4. Train the model
         # --------------------------------------------------------
         print("Train a Model")
-        Amplitude = 756 / 1000000000
-        Tau = 125
         N_EPOCHS = 250
         history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-              epochs=N_EPOCHS, batch_size=16, verbose=2,
-                        callbacks=[
-                            tf.keras.callbacks.LearningRateScheduler(
-                                lambda epoch: Amplitude * 10 ** (epoch / Tau)
-                            )
-                        ]
-                        )
+              epochs=N_EPOCHS, batch_size=16, verbose=2)
 
         TrainingAccuracy = TrainingAccuracy.append(pd.DataFrame({str(i): history.history["accuracy"]}))
         print("TrainingAccuracy", TrainingAccuracy)
@@ -199,11 +192,7 @@ if __name__ == "__main__":
             history.history['accuracy'],
             label='Accuracy', lw=3
         )
-        plt.plot(
-            np.arange(1, N_EPOCHS+1),
-            history.history['lr'],
-            label='Learning rate', color='#000', lw=3, linestyle='--'
-        )
+
         plt.title('Evaluation metrics', size=20)
         plt.xlabel('Epoch', size=14)
         plt.legend()
