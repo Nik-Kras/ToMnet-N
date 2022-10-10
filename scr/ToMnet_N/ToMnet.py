@@ -16,7 +16,7 @@ class ToMnet(Model):
     BATCH_SIZE = 16
 
     LENGTH_E_CHAR = 8
-    NUM_RESIDUAL_BLOCKS = 5
+    NUM_RESIDUAL_BLOCKS = 8
 
     TRAIN_EMA_DECAY = 0.95
     INIT_LR = 0.0001
