@@ -100,7 +100,7 @@ if __name__ == "__main__":
         train_goal, test_goal, valid_goal, \
         train_act, test_act, valid_act = \
             data_handler.load_all_games(directory=path_exper_1,
-                                        use_percentage=0.5)
+                                        use_percentage=0.01)
 
         Data = {"train_traj":train_traj,
                 "test_traj":test_traj,
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         # 4. Train the model
         # --------------------------------------------------------
         print("Train a Model")
-        N_EPOCHS = 250
+        N_EPOCHS = 500
         history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
               epochs=N_EPOCHS, batch_size=16, verbose=2)
 
@@ -171,6 +171,9 @@ if __name__ == "__main__":
             "val_loss": history.history['val_loss'],
             "val_accuracy": history.history['val_accuracy'],
         }))
+
+        TrainingAccuracy.to_csv('TrainingAccuracy.csv')
+        TrainHistory.to_csv("TrainHistory_LR_Search.csv")
 
         plt.plot(
             np.arange(1, N_EPOCHS+1),
@@ -236,8 +239,7 @@ if __name__ == "__main__":
         # --------------------------------------------------------
 
 
-    TrainingAccuracy.to_csv('TrainingAccuracy.csv')
-    TrainHistory.to_csv("TrainHistory_LR_Search.csv")
+
 
     print("Accuracies: ", Accuracies)
 
