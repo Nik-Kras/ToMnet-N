@@ -154,6 +154,23 @@ class DataProcessor:
         print("Concatenation is finished")
         return UniData
 
+
+    def unite_single_traj_current(self, single_game):
+
+        print("Apply concatenation to a single trajectory... ")
+        # Add Trajectory in the beginning
+        purpose = key[:-(len("input") + 1)]  # train / test / valid
+        for i in range(len(DictData[purpose + "_traj"])):
+            UniData[key][i][0:self.MAX_TRAJECTORY_SIZE] = DictData[purpose + "_traj"][i]
+
+        # Add Current in the end
+        for i in range(len(DictData[purpose + "_traj"])):
+            # 12x12x6 -> 12x12x10
+            data_expanded = np.repeat(DictData[purpose + "_current"][i], repeats=2, axis=-1)
+            data_expanded = data_expanded[..., 0:10]
+            UniData[key][i][self.MAX_TRAJECTORY_SIZE] = data_expanded
+
+
     def validate_data(self, DictData):
 
         """

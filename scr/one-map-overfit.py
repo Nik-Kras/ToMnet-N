@@ -83,37 +83,23 @@ if __name__ == "__main__":
                                               h = COL,
                                               d = DEPTH)
 
-        path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Experiment 3')
+        path_exper_1 = os.path.join('..', 'data', 'Saved Games', 'Overfit')
 
-        # Load 4 types of data for 3 purposes
-        # Purpose:
-        #   - Training
-        #   - Testing
-        #   - Validating
-        # Data:
-        #   - Trajectory (from 5 to MAX_TRAJ-1 steps)
-        #   - Current state (map at the end of Trajectory)
-        #   - Goal eaten by the end of the game (for preference prediction)
-        #   - Next action from Current position (for action prediction)
-        train_traj, test_traj, valid_traj, \
-        train_current, test_current, valid_current, \
-        train_goal, test_goal, valid_goal, \
-        train_act, test_act, valid_act = \
-            data_handler.load_all_games(directory=path_exper_1,
-                                        use_percentage=0.01)
+        #
+        # single_game = {
+        #     "traj": traj,  # Original trajectory
+        #     "act": act,
+        #     "goal": goal,
+        #     "ToM":
+        #         {
+        #             "traj_history": traj_history,
+        #             # Sequence of trajectories for ToMnet predictions. NO ZERO PADDING HERE!
+        #             "current_state_history": current_state_history,
+        #             "actions_history": actions_history
+        #         }
+        # }
+        single_game =  data_handler.load_one_game(directory=path_exper_1)
 
-        Data = {"train_traj":train_traj,
-                "test_traj":test_traj,
-                "valid_traj":valid_traj,
-                "train_current":train_current,
-                "test_current":train_current,
-                "valid_current":valid_current,
-                "train_goal": train_goal,
-                "test_goal": test_goal,
-                "valid_goal": valid_goal,
-                "train_act": train_act,
-                "test_act": test_act,
-                "valid_act": valid_act}
 
         # --------------------------------------------------------
         # 2. Pre-process data - Zero Padding
@@ -125,10 +111,10 @@ if __name__ == "__main__":
 
         # data_processor.validate_data(Data)
 
-        Data = data_processor.zero_padding(max_elements= MAX_TRAJ,
-                                                  DictData=Data)
+        single_game = data_processor.zero_pad_single_game(max_elements= MAX_TRAJ,
+                                                  single_game=single_game)
 
-        DataProcessed = data_processor.unite_traj_current(Data)
+        single_game = data_processor.unite_traj_current(single_game)
 
         # Make Tensors from List
         X_Train, X_Test, X_Valid, \
@@ -208,36 +194,6 @@ if __name__ == "__main__":
         print('Accuracy: %.2f' % (accuracy * 100))
 
         Accuracies.append(accuracy * 100)
-
-        # # summarize history for accuracy
-        # plt.plot(history.history['accuracy'])
-        # plt.plot(history.history['val_accuracy'])
-        # plt.title('model accuracy')
-        # plt.ylabel('accuracy')
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'test'], loc='upper left')
-        # plt.show()
-        # # summarize history for loss
-        # plt.plot(history.history['loss'])
-        # plt.plot(history.history['val_loss'])
-        # plt.title('model loss')
-        # plt.ylabel('loss')
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'test'], loc='upper left')
-        # plt.show()
-
-        # --------------------------------------------------------
-        # 6. Predict with ToMnet-N
-        # --------------------------------------------------------
-
-        # single_game = data_handler.load_one_game(path_exper_1)
-        # single_game = data_processor.zero_pad_single_game(MAX_TRAJ, single_game)
-        # init_map = map_from_traj(single_game[0])
-
-        # --------------------------------------------------------
-        # 7. Save the model
-        # --------------------------------------------------------
-
 
 
 
