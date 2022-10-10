@@ -157,8 +157,8 @@ if __name__ == "__main__":
         # 4. Train the model
         # --------------------------------------------------------
         print("Train a Model")
-        Amplitude = 5 / 100000000
-        Tau = 83.33
+        Amplitude = 756 / 1000000000
+        Tau = 125
         N_EPOCHS = 250
         history = t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
               epochs=N_EPOCHS, batch_size=16, verbose=2,
