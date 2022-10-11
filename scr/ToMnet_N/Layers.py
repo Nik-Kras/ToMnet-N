@@ -19,8 +19,8 @@ from keras.layers import LSTM
 from keras import activations
 
 class CustomCnn(keras.layers.Layer):
-    def __init__(self, input_tensor=None, activation="linear", filters=32, UseTimeWrapper=False):
-        super(CustomCnn, self).__init__()
+    def __init__(self, input_tensor=None, activation="linear", filters=32, UseTimeWrapper=False, **kwargs):
+        super(CustomCnn, self).__init__(**kwargs)
         self.input_tensor = input_tensor
         self.activation = activation
         self.filters = filters
@@ -66,15 +66,15 @@ class CustomCnn(keras.layers.Layer):
       })
       return config
 
-def CustomCnnCharNet(input_tensor=None, activation="linear", filters=32):
-    return CustomCnn(input_tensor=input_tensor, activation=activation, filters=filters, UseTimeWrapper=True)
+def CustomCnnCharNet(input_tensor=None, activation="linear", filters=32, **kwargs):
+    return CustomCnn(input_tensor=input_tensor, activation=activation, filters=filters, UseTimeWrapper=True, **kwargs)
 
-def CustomCnnPredNet(input_tensor=None, activation="linear", filters=32):
-    return CustomCnn(input_tensor=input_tensor, activation=activation, filters=filters, UseTimeWrapper=False)
+def CustomCnnPredNet(input_tensor=None, activation="linear", filters=32, **kwargs):
+    return CustomCnn(input_tensor=input_tensor, activation=activation, filters=filters, UseTimeWrapper=False, **kwargs)
 
 class ResBlock(keras.layers.Layer):
-    def __init__(self, UseTimeWrapper=False):
-        super(ResBlock, self).__init__()
+    def __init__(self, UseTimeWrapper=False, **kwargs):
+        super(ResBlock, self).__init__(**kwargs)
         if UseTimeWrapper:
             self.conv1 = CustomCnnCharNet(activation="linear")
             # Use Batch Normalisation and then Relu activation in future!
@@ -113,8 +113,8 @@ def ResBlockPredNet():
     return ResBlock(UseTimeWrapper=False)
 
 class CustomLSTM(keras.layers.Layer):
-  def __init__(self, num_hidden = 128, output_keep_prob = 0.02):
-    super(CustomLSTM, self).__init__()
+  def __init__(self, num_hidden = 128, output_keep_prob = 0.02, **kwargs):
+    super(CustomLSTM, self).__init__(**kwargs)  # including name = name
     self.num_hidden = num_hidden
     self.output_keep_prob = output_keep_prob
     self.lstm = LSTM(units=num_hidden,
