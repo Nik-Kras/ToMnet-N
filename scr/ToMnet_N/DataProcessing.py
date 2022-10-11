@@ -54,7 +54,7 @@ class DataProcessor:
             if Nt > max_elements:
                 zero_pad_trajectory = current_trajectory[-max_elements:]
             else:
-                zero_pad_trajectory[-Nt:, ...] = current_trajectory
+                zero_pad_trajectory[:Nt, ...] = current_trajectory
             TrajZeroPad.append(zero_pad_trajectory)
             print("h")
 
@@ -159,7 +159,7 @@ class DataProcessor:
 
         print("Apply concatenation to a single trajectory... ")
         trajectories_list = single_game["input_predict"]
-        current_state_list = single_game["current_state_history"]
+        current_state_list = single_game["ToM"]["current_state_history"]
         assert len(trajectories_list) == len(current_state_list)
 
         concat_shape = (self.MAX_TRAJECTORY_SIZE + 1, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH)
@@ -174,8 +174,8 @@ class DataProcessor:
             cur_state_expanded = cur_state_expanded[..., 0:10] # 12x12x6 -> 12x12x10
 
             concatenated_data = np.zeros(shape=concat_shape)
-            concatenated_data[0:self.MAX_TRAJECTORY_SIZE + 1] = cur_traj
-            concatenated_data[self.MAX_TRAJECTORY_SIZE + 1] = cur_state_expanded
+            concatenated_data[0:self.MAX_TRAJECTORY_SIZE] = cur_traj
+            concatenated_data[self.MAX_TRAJECTORY_SIZE] = cur_state_expanded
 
             united_data.append(concatenated_data)
 

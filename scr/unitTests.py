@@ -24,11 +24,7 @@ game_directory = os.path.join('..', 'data', 'Saved Games', 'UnitTest')
 class TestLoadOneGame(unittest.TestCase):
     def runTest(self):
         loader = dl.DataHandler(ts, w, h, d)
-        train_traj, test_traj, valid_traj, \
-        train_current, test_current, valid_current, \
-        train_goal, test_goal, valid_goal, \
-        train_act, test_act, valid_act = loader.load_all_games(game_directory)
-
+        traj, act, goal = loader.read_one_game(game_directory)
 
         self.assertEqual(6, 6, "incorrect area")
 
@@ -36,20 +32,20 @@ class TestLoadOneGame(unittest.TestCase):
 
 def init_checking_values():
 
-    MAZE = """
-            #######-##-#
-            ----D---##-#
-            #-#####-##-#
-            #-#####-##-#
-            #-----B-##-#
-            #-#####-##-#
-            #A#####-##-#
-            --C-----##--
-            ####-##-##-#
-            ####-##-##-#
-            --------O--#
-            #-########-#
-            """
+    MAZE = \
+"""#######-##-#
+----D---##-#
+#-#####-##-#
+#-#####-##-#
+#-----B-##-#
+#-#####-##-#
+#A#####-##-#
+--C-----##--
+####-##-##-#
+####-##-##-#
+--------O--#
+#-########-#"""
+
     print("Maze: ", MAZE)
 
     ### Read the Maze
@@ -75,19 +71,42 @@ def init_checking_values():
             elif sym == 'D':
                 goals[row, col, 3] = 1
 
+    action_list_array = []
     action_list = [3] + [0]*9 + [3]*3
     N = len(action_list)
-    actions = np.zeros(shape=(N, 12, 12, 4))
+    MIN_TRAJ = 5
+    # actions = np.zeros(shape=(N-MIN_TRAJ, 12, 12, 4))
     print("Action seq: ", action_list)
 
-    current_position = np.where(player == 1)
+    current_position = list(np.where(player == 1))
+    row_change = 0
+    col_change = 0
     for i in range(N):
         currecnt_action = action_list[i]
         row, col = current_position
 
-        actions[i]
+        action_array = np.zeros(shape=(12, 12, 4))
 
+        action_array[row, col, currecnt_action] = 1
+        action_list_array.append(action_array)
 
+        if currecnt_action == 0:    # UP
+            row_change = -1
+            col_change = 0
+        elif currecnt_action == 1:  # RIGHT
+            row_change = 0
+            col_change = 1
+        elif currecnt_action == 2:  # DOWN
+            row_change = 1
+            col_change = 0
+        elif currecnt_action == 3:  # LEFT
+            row_change = 0
+            col_change = -1
+
+        current_position[0] = current_position[0] + row_change
+        current_position[1] = current_position[1] + col_change
+
+    action_array = np.array(action_list_array)
 
 if __name__ == "__main__":
     print("Unit Tests are running!")

@@ -114,11 +114,13 @@ if __name__ == "__main__":
         single_game = data_processor.zero_pad_single_game(max_elements= MAX_TRAJ,
                                                   single_game=single_game)
 
-        single_game = data_processor.unite_traj_current(single_game)
+        single_game = data_processor.unite_single_traj_current(single_game)
 
         # Make Tensors from List
-        X_Train = single_game["united_input"]
-        Y_act_Train = single_game["actions_history"]
+        indices = [x - 1 for x in single_game["ToM"]["actions_history"]]  # 1-4 --> 0-3
+        depth = 4
+        X_Train = tf.convert_to_tensor(single_game["united_input"])
+        Y_act_Train = tf.one_hot(indices, depth)
 
         # --------------------------------------------------------
         # 3. Create and set the model
@@ -134,8 +136,8 @@ if __name__ == "__main__":
                   optimizer=tf.keras.optimizers.Adam(Learning_Rate), # tf.keras.optimizers.Adam(learning_rate=0.0001)
                   metrics=['accuracy'])
 
-        t.fit(x=X_Train, y=Y_act_Train, validation_data=(X_Valid, Y_act_Valid),
-              epochs=1, batch_size=16, verbose=2)
+        t.fit(x=X_Train, y=Y_act_Train,
+              epochs=1, batch_size=1, verbose=2)
 
         t.summary()
 
@@ -145,16 +147,14 @@ if __name__ == "__main__":
         print("Train a Model")
         N_EPOCHS = 500
         history = t.fit(x=X_Train, y=Y_act_Train,
-              epochs=N_EPOCHS, batch_size=16, verbose=2)
+              epochs=N_EPOCHS, batch_size=1, verbose=2)
 
         TrainingAccuracy = TrainingAccuracy.append(pd.DataFrame({str(i): history.history["accuracy"]}))
         print("TrainingAccuracy", TrainingAccuracy)
 
         TrainHistory = TrainHistory.append(pd.DataFrame({
             "loss": history.history['loss'],
-            "accuracy": history.history['accuracy'],
-            "val_loss": history.history['val_loss'],
-            "val_accuracy": history.history['val_accuracy'],
+            "accuracy": history.history['accuracy']
         }))
 
         TrainingAccuracy.to_csv('TrainingAccuracy.csv')
