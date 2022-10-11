@@ -43,6 +43,7 @@ class ToMnet(Model):
         # Set compilers / savers / loggers / callbacks
 
     def call(self, inputs):
+
         input_trajectory = inputs[..., 0:self.MAX_TRAJECTORY_SIZE, :, :, :]
         input_current_state = inputs[..., self.MAX_TRAJECTORY_SIZE, :, :, 0:6]
 

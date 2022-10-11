@@ -56,7 +56,6 @@ class DataProcessor:
             else:
                 zero_pad_trajectory[:Nt, ...] = current_trajectory
             TrajZeroPad.append(zero_pad_trajectory)
-            print("h")
 
         single_game["input_predict"] = TrajZeroPad
 

@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 class Model(mp.ModelParameter):
@@ -36,6 +35,7 @@ MAX_TRAJ = 15
 EPOCHS = 25 # 150 (no need to have more than 150)
 
 MODEL_PATH = "../save_model/overfitted"
+GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
 
 def dict_to_tensors(Dict):
 
@@ -113,8 +113,6 @@ def load_data(directory):
 
 def train_model():
 
-    TrainingAccuracy = pd.DataFrame()
-    TrainHistory = pd.DataFrame()
     # --------------------------------------------------------
     # 3. Create and set the model
     # --------------------------------------------------------
@@ -141,10 +139,13 @@ def train_model():
     print("Train a Model")
     history = t.fit(x=X_Train, y=Y_act_Train,
                     epochs=EPOCHS, batch_size=1, verbose=2)
+    plot_history(history)
+    save_history(history)
 
-    TrainingAccuracy = TrainingAccuracy.append(pd.DataFrame({str(1): history.history["accuracy"]}))
-    print("TrainingAccuracy", TrainingAccuracy)
+    t.save(MODEL_PATH)
 
+def plot_history(history):
+    TrainHistory = pd.DataFrame()
     TrainHistory = TrainHistory.append(pd.DataFrame({
         "loss": history.history['loss'],
         "accuracy": history.history['accuracy']
@@ -166,10 +167,14 @@ def train_model():
     plt.legend()
     plt.show()
 
-    TrainingAccuracy.to_csv('TrainingAccuracy.csv')
-    TrainHistory.to_csv("TrainHistory_LR_Search.csv")
+def save_history(history, name="TrainHistory.csv"):
+    TrainHistory = pd.DataFrame()
+    TrainHistory = TrainHistory.append(pd.DataFrame({
+        "loss": history.history['loss'],
+        "accuracy": history.history['accuracy']
+    }))
+    TrainHistory.to_csv(name)
 
-    t.save(MODEL_PATH)
 
 def load_model():
     custom_layers = {
@@ -179,24 +184,125 @@ def load_model():
     }
     return tf.keras.models.load_model(MODEL_PATH, custom_objects=custom_layers)
 
+def predict_game(model, input_data, predict_steps=5):
+
+    # Trajectory Depth saved as - (np_obstacles, np_agent, np_targets, np_actions)
+    # Traj shape = BS x TS x W x H x D. 1x5-15x12x12x10
+
+    # Check for Batch_Size dim
+    if input_data.shape[0] != 1:
+        input_data = tf.expand_dims(input_data, axis=0)
+
+    path_to_save = "../Results/Predictions/Prediction 1/"
+    width = input_data.shape[2]
+    height = input_data.shape[3]
+
+    # --------------------------------------------------------
+    # 1. Build Initial Map
+    # --------------------------------------------------------
+    simple_map = np.zeros((12, 12), dtype=np.int16)  # 0-path, 1-wall, 2/5-goals, 10-player
+
+    # Put walls
+    walls_layer = input_data[0, 0, ..., 0]
+    for row in range(width):
+        for col in range(height):
+            if walls_layer[row, col] == 1:
+                simple_map[row, col] = 1
+
+    # Put player
+    player_layer = input_data[0, 0, ..., 1]
+    for row in range(width):
+        for col in range(height):
+            if player_layer[row, col] == 1:
+                simple_map[row, col] = 10
+
+    # Put goals
+    goal_layer = input_data[0, 0, ..., 2:6]
+    assert goal_layer.shape[-1] == 4            # Check that there are 4 layers for 4 goals
+    for row in range(width):
+        for col in range(height):
+            if goal_layer[row, col, 0] == 1:
+                simple_map[row, col] = 2
+            elif goal_layer[row, col, 1] == 1:
+                simple_map[row, col] = 3
+            elif goal_layer[row, col, 2] == 1:
+                simple_map[row, col] = 4
+            elif goal_layer[row, col, 3] == 1:
+                simple_map[row, col] = 5
+    map_df = pd.DataFrame(simple_map)
+    map_df.to_csv(path_to_save+str("simple_map.csv"))
+
+    # --------------------------------------------------------
+    # 2. Save Initial Trajectory
+    # --------------------------------------------------------
+    init_traj_actions = []
+
+    # Create list of actions saved in trajectory
+    TS = input_data.shape[1]    # Trajectory Size
+    for i in range(TS):
+        all_action_layers = input_data[0, 0, ..., 6:10]
+        for action_number, action_layer in enumerate(all_action_layers):
+            action_performed = 1 in action_layer
+            if action_performed:
+                init_traj_actions.append(action_number)
+    print(init_traj_actions)
+
+    # Find initial position
+    initial_coordinates = np.where(player_layer == 1)
+
+    # Create coordinate sequence
+    init_traj_coordinates = [initial_coordinates]
+    for i in range(TS):
+        init_traj_coordinates
+
+    # --------------------------------------------------------
+    # 3. Save Predicted Trajectory
+    # --------------------------------------------------------
+    # Make action predictions
+    predicted_actions = []
+    coordinates = []
+    for i in range(predict_steps):
+        predict_distribution = model.predict(input_data)
+        predicted_action = list(np.where(predict_distribution == max(predict_distribution)))    # 0 - 3
+        predicted_actions.append(predicted_action)
+
+        player_position = input_data
+
+    return predicted_actions
+
 if __name__ == "__main__":
 
-    # To fix ERROR: OMP: Error #15: Initializing libiomp5, but found libiomp5md.dll already initialized.
-    # OMP: Hint This means that multiple copies of the OpenMP runtime have been linked into the program. That is dangerous, since it can degrade performance or cause incorrect results. The best thing to do is to ensure that only a single OpenMP runtime is linked into the process, e.g. by avoiding static linking of the OpenMP runtime in any library. As an unsafe, unsupported, undocumented workaround you can set the environment variable KMP_DUPLICATE_LIB_OK=TRUE to allow the program to continue to execute, but that may cause crashes or silently produce incorrect results. For more information, please see http://openmp.llvm.org/
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True' # SHOULD DELETE?
+    # To fix ERROR
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-    # Load data
-    path_overfit = os.path.join('..', 'data', 'Saved Games', 'Overfit')
-    X_Train, Y_act_Train = load_data(directory=path_overfit)
+    ### Load data
+    X_Train, Y_act_Train = load_data(directory=GAME_PATH)
 
-    # Train the model
-    train_model()
+    ### Train the model
+    # train_model()
 
-    # Use trained model
+    ### Use trained model
     model =  load_model()
 
-    history = model.fit(x=X_Train, y=Y_act_Train,
-                    epochs=EPOCHS, batch_size=1, verbose=2)
+    ### Keep training the model
+    # history = model.fit(x=X_Train, y=Y_act_Train,
+    #                 epochs=EPOCHS, batch_size=1, verbose=2)
+    # plot_history(history)
+
+    ### Test it on one prediction
+    N_trajectories = X_Train.shape[0]
+    random_inx = np.random.randint(0, N_trajectories-1)
+    input_data = X_Train[random_inx, ...]
+    input_data = tf.expand_dims(input_data, axis=0) # Add axis for "batch_size"
+    actual_action = Y_act_Train[random_inx]
+    yhat = model.predict(input_data)
+
+    print("Actual action: ", actual_action)
+    print("Predicted action: ", yhat)
+
+
+    ### Predict trajectory
+    predict_game(model, input_data, predict_steps=5)
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")
