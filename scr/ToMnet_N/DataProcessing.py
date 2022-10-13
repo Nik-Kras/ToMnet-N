@@ -40,7 +40,7 @@ class DataProcessor:
     def zero_pad_single_game(self, max_elements, single_game):
 
         # A single game has several trajectories
-        all_trajectories = single_game["ToM"]["traj_history"]
+        all_trajectories = single_game["ToM"]["united_input"]
         N = len(all_trajectories)
         TrajZeroPad = []
 
@@ -57,7 +57,7 @@ class DataProcessor:
                 zero_pad_trajectory[:Nt, ...] = current_trajectory
             TrajZeroPad.append(zero_pad_trajectory)
 
-        single_game["input_predict"] = TrajZeroPad
+        single_game["ToM"]["input_predict"] = TrajZeroPad
 
         return single_game
 
@@ -157,11 +157,10 @@ class DataProcessor:
     def unite_single_traj_current(self, single_game):
 
         print("Apply concatenation to a single trajectory... ")
-        trajectories_list = single_game["input_predict"]
+        trajectories_list = single_game["ToM"]["traj_history"]
         current_state_list = single_game["ToM"]["current_state_history"]
         assert len(trajectories_list) == len(current_state_list)
 
-        concat_shape = (self.MAX_TRAJECTORY_SIZE + 1, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH)
         N = len(trajectories_list)
         united_data = []
         for i in range(N):
@@ -169,16 +168,18 @@ class DataProcessor:
             cur_traj = trajectories_list[i]     # 15x12x12x10
             cur_state = current_state_list[i]   # 12x12x6
 
-            cur_state_expanded = np.repeat(cur_state, repeats=2, axis=-1)
-            cur_state_expanded = cur_state_expanded[..., 0:10] # 12x12x6 -> 12x12x10
+            cur_state_expanded = np.zeros(shape=(self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH))
+            cur_state_expanded[..., 0:6] = cur_state # 12x12x6 -> 12x12x10
 
+            Ntraj = cur_traj.shape[0]
+            concat_shape = (Ntraj + 1, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH)
             concatenated_data = np.zeros(shape=concat_shape)
-            concatenated_data[0:self.MAX_TRAJECTORY_SIZE] = cur_traj
-            concatenated_data[self.MAX_TRAJECTORY_SIZE] = cur_state_expanded
+            concatenated_data[0:Ntraj] = cur_traj
+            concatenated_data[Ntraj] = cur_state_expanded
 
             united_data.append(concatenated_data)
 
-        single_game["united_input"] = united_data
+        single_game["ToM"]["united_input"] = united_data
 
         return single_game
 

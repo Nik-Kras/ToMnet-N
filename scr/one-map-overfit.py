@@ -98,15 +98,15 @@ def load_data(directory):
 
     # data_processor.validate_data(Data)
 
+    single_game = data_processor.unite_single_traj_current(single_game)
+
     single_game = data_processor.zero_pad_single_game(max_elements=MAX_TRAJ,
                                                       single_game=single_game)
-
-    single_game = data_processor.unite_single_traj_current(single_game)
 
     # Make Tensors from List
     indices = [x - 1 for x in single_game["ToM"]["actions_history"]]  # 1-4 --> 0-3
     depth = 4
-    X_Train = tf.convert_to_tensor(single_game["united_input"])
+    X_Train = tf.convert_to_tensor(single_game["ToM"]["input_predict"])
     Y_act_Train = tf.one_hot(indices, depth)
 
     return X_Train, Y_act_Train
@@ -119,7 +119,7 @@ def train_model():
     print("----")
     print("Create a model")
     Learning_Rate = 0.0001
-    t = ToMnet.ToMnet(ts=MAX_TRAJ,
+    t = ToMnet.ToMnet(ts=MAX_TRAJ-1,    # 14 frames are real trajectory, 1 frame is current state. So MAX_TRAJ is 14, not 15
                       w=ROW,
                       h=COL,
                       d=DEPTH)
@@ -145,11 +145,6 @@ def train_model():
     t.save(MODEL_PATH)
 
 def plot_history(history):
-    TrainHistory = pd.DataFrame()
-    TrainHistory = TrainHistory.append(pd.DataFrame({
-        "loss": history.history['loss'],
-        "accuracy": history.history['accuracy']
-    }))
 
     plt.plot(
         np.arange(1, EPOCHS + 1),
@@ -198,7 +193,7 @@ def predict_game(model, input_data, predict_steps=5):
     height = input_data.shape[3]
 
     # --------------------------------------------------------
-    # 1. Build Initial Map
+    # 1. Build Initial Map (simple map) for rendering
     # --------------------------------------------------------
     simple_map = np.zeros((12, 12), dtype=np.int16)  # 0-path, 1-wall, 2/5-goals, 10-player
 
@@ -230,43 +225,98 @@ def predict_game(model, input_data, predict_steps=5):
             elif goal_layer[row, col, 3] == 1:
                 simple_map[row, col] = 5
     map_df = pd.DataFrame(simple_map)
-    map_df.to_csv(path_to_save+str("simple_map.csv"))
+    map_df.to_csv(path_to_save + str("simple_map.csv"))
 
     # --------------------------------------------------------
-    # 2. Save Initial Trajectory
+    # 2. Save Full Trajectory
     # --------------------------------------------------------
     init_traj_actions = []
 
     # Create list of actions saved in trajectory
-    TS = input_data.shape[1]    # Trajectory Size
+    TS = input_data.shape[1] - 1   # Trajectory Size. The last frame is current state, no actions are shown there
     for i in range(TS):
-        all_action_layers = input_data[0, 0, ..., 6:10]
-        for action_number, action_layer in enumerate(all_action_layers):
-            action_performed = 1 in action_layer
-            if action_performed:
+        all_action_layers = input_data[0, i, ..., 6:10]
+        bool_val = False
+        for action_number in range(4):
+            action_layer = np.array(all_action_layers[..., action_number], dtype=np.int8)
+            bool_val = 1 in action_layer    # np.where(n_array == 1) # Should also work
+            bool_val = np.any(bool_val)
+            if bool_val:
                 init_traj_actions.append(action_number)
+
+        # If no actions were found in a frame - it is a Zero_padding. Cut it
+        if bool_val == False:
+            TS = i
+            break
+
     print(init_traj_actions)
 
     # Find initial position
-    initial_coordinates = np.where(player_layer == 1)
+    initial_coordinates = list(np.where(player_layer == 1))
 
     # Create coordinate sequence
-    init_traj_coordinates = [initial_coordinates]
+    full_traj_coordinates = [initial_coordinates]
     for i in range(TS):
-        init_traj_coordinates
+        coordinates = full_traj_coordinates[-1]
+        applied_action = init_traj_actions[i]
+
+        dr = 0
+        dc = 0
+        if applied_action == 0:
+            dr = -1
+            dc = 0
+        elif applied_action == 1:
+            dr = 0
+            dc = 1
+        elif applied_action == 2:
+            dr = 1
+            dc = 0
+        elif applied_action == 3:
+            dr = 0
+            dc = -1
+
+        coordinates[0] = coordinates[0] + dr
+        coordinates[1] = coordinates[1] + dc
+
+        full_traj_coordinates.append(coordinates)
+
+    print(full_traj_coordinates)
+    full_traj_coordinates_df = pd.DataFrame(full_traj_coordinates)
+    full_traj_coordinates_df.to_csv(path_to_save + str("full_traj.csv"))
 
     # --------------------------------------------------------
-    # 3. Save Predicted Trajectory
+    # 3. Save Initial Trajectory
     # --------------------------------------------------------
+
+    Nfull = len(full_traj_coordinates)
+    if Nfull - predict_steps < 5:
+        raise ValueError("The game is too short! It has only " + str(Nfull) + " moves, while you ask to predict"
+                         + str(predict_steps) +
+                         " actions. Give at least a game with trajectory length bigger than predicted actions by 5.")
+    initial_traj_coordinates = full_traj_coordinates[0:-predict_steps]
+    initial_traj_coordinates_df = pd.DataFrame(initial_traj_coordinates)
+    initial_traj_coordinates_df.to_csv(path_to_save + str("init_traj.csv"))
+
+    # --------------------------------------------------------
+    # 4. Save Predicted Trajectory
+    # --------------------------------------------------------
+
+    # Initial trajectory for ToMnet
+    initial_input_data = input_data[..., ]
+
     # Make action predictions
     predicted_actions = []
     coordinates = []
     for i in range(predict_steps):
+        # Get predicted action
         predict_distribution = model.predict(input_data)
         predicted_action = list(np.where(predict_distribution == max(predict_distribution)))    # 0 - 3
         predicted_actions.append(predicted_action)
 
+        # Update players coordinates
         player_position = input_data
+
+        # Update input data trajectory
 
     return predicted_actions
 
@@ -279,7 +329,7 @@ if __name__ == "__main__":
     X_Train, Y_act_Train = load_data(directory=GAME_PATH)
 
     ### Train the model
-    # train_model()
+    train_model()
 
     ### Use trained model
     model =  load_model()
