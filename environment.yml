@@ -1,0 +1,7 @@
+name: ToMnet-Conda
+channels:
+    - conda-forge
+dependencies:
+    - tensorflow
+    - pandas
+    - matplotlib

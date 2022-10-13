@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 
+import numpy as np
 from keras.models import Model
 from keras.layers import Dense
 from keras.layers import Dropout
@@ -44,6 +45,9 @@ class ToMnet(Model):
 
     def call(self, inputs):
 
+        # To fix ERROR with Tensor <-> Numpy compatibility
+        tf.compat.v1.enable_eager_execution()
+
         input_trajectory = inputs[..., 0:self.MAX_TRAJECTORY_SIZE, :, :, :]
         input_current_state = inputs[..., self.MAX_TRAJECTORY_SIZE, :, :, 0:6]
 
@@ -52,7 +56,9 @@ class ToMnet(Model):
         print("In ToMnet-N: ")
         print("input_trajectory: ", input_trajectory.shape)
         print("input_current_state: ", input_current_state.shape)
-        print("e_char: ", e_char.shape)
+        print("e_char SHAPE: ", e_char.shape)
+        print("e_char TYPE", type(e_char))
+        print("e_char", e_char)
 
         # --------------------------------------------------------------
         # Paper codes
@@ -63,20 +69,23 @@ class ToMnet(Model):
         # Spatialise and unite different data into one tensor
         # They are automatically decompose in the Pred Net to different data
         # --------------------------------------------------------------
-        e_char_new = tf.repeat(e_char, repeats=2, axis=-1)
+        e_char_new = tf.concat(values=[e_char,e_char], axis = 1) # tf.repeat(e_char, repeats=2, axis=-1)
         e_char_new = e_char_new[..., 0:12]
+        print("Before Concatenation: ", e_char.shape)
+        print("After Concatenation: ", e_char_new.shape)
 
-        print("e_char_new: ", e_char_new.shape)
+        # print("e_char_new: ", e_char_new.shape)
         e_char_new = tf.expand_dims(e_char_new, axis=-1)
-        print("e_char_new: ", e_char_new.shape)
+        # print("e_char_new: ", e_char_new.shape)
         e_char_new = tf.repeat(e_char_new, repeats=12, axis=-1)
-        print("e_char_new: ", e_char_new.shape)
+        # print("e_char_new: ", e_char_new.shape)
         e_char_new = tf.expand_dims(e_char_new, axis=-1)
         print("e_char_new: ", e_char_new.shape)
+        print("input_current_state: ", input_current_state.shape)
 
         mix_data = tf.keras.layers.Concatenate(axis=-1)([input_current_state, e_char_new])
 
-        print("pred input: ", mix_data.shape)
+        print("mix_data (pred input): ", mix_data.shape)
 
         pred = self.pred_net(mix_data)
         output = pred

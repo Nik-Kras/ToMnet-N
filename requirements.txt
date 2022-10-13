@@ -1,5 +1,5 @@
 matplotlib
-tensorflow
+tensorflow==2.5.0
 pandas
 sklearn
-pygame>=2.1.2
+numpy==1.19.5
