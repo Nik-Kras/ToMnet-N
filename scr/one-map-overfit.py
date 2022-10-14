@@ -100,7 +100,7 @@ def load_data(directory):
 
     # single_game = data_processor.unite_single_traj_current(single_game)
 
-    single_game = data_processor.zero_pad_single_game(max_elements=MAX_TRAJ-1,
+    single_game = data_processor.zero_pad_single_game(max_elements=MAX_TRAJ,
                                                       single_game=single_game)
 
     # Make Tensors from List
@@ -121,7 +121,7 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     print("----")
     print("Create a model")
     Learning_Rate = 0.0001
-    t = ToMnet.ToMnet(ts=MAX_TRAJ-1,    # 14 frames are real trajectory, 1 frame is current state. So MAX_TRAJ is 14, not 15
+    t = ToMnet.ToMnet(ts=MAX_TRAJ,
                       w=ROW,
                       h=COL,
                       d=DEPTH)
@@ -306,6 +306,21 @@ def predict_game(model, input_data, predict_steps=5):
     # 4. Save Predicted Trajectory
     # --------------------------------------------------------
 
+    # Remove Zero-Padding from Trajectory
+    # ...
+    # Currently it doesn't have zero-padding
+
+    # Traj -> Traj_zero_pad + current state
+    input_traj = tf.cast(input_data[0, 0:-predict_steps, ...], tf.float32)
+    input_current = tf.cast(input_data[0, -predict_steps, ...], tf.float32)
+    NeededZeros = MAX_TRAJ - input_traj.shape[0] # Add Zeros up to MAX_TRAJ
+    if NeededZeros > 0:
+        zero_pad_shape = (NeededZeros, ROW, COL, DEPTH)
+        zero_pad = tf.zeros(shape=zero_pad_shape, dtype=tf.float32)
+        input_traj = tf.concat(values=[input_traj, zero_pad], axis=0)
+    input_traj = tf.expand_dims(input_traj, axis=0)
+    input_current = tf.expand_dims(input_current, axis=0)
+
     # Initial trajectory for ToMnet
     zero_pad_shape = (predict_steps, ROW, COL, DEPTH)
     zaro_pad = tf.cast(tf.zeros(shape=zero_pad_shape), tf.float32)                  # For concat        #
@@ -364,7 +379,7 @@ def predict_game(model, input_data, predict_steps=5):
 
         # Update input data trajectory with a new frame instead of zero-pad layer
         new_traj = tf.concat(values=[updated_traj, new_frame], axis=0)
-        NeededZeros = MAX_TRAJ - new_traj.shape[0] - 1 # Add Zeros up to MAX_TRAJ-1, as last frame - current state!
+        NeededZeros = MAX_TRAJ - new_traj.shape[0] # Add Zeros up to MAX_TRAJ
 
         if NeededZeros > 0:
             zero_pad_shape = (NeededZeros, ROW, COL, DEPTH)
@@ -391,11 +406,14 @@ if __name__ == "__main__":
     ### Load data
     X_train_traj, X_train_current, Y_act_Train = load_data(directory=GAME_PATH)
 
+    # x_debug = X_train_traj.numpy()
+    # x_debug = X_train_current.numpy()
+
     ### Train the model
     train_model(X_train_traj, X_train_current, Y_act_Train)
 
     ### Use trained model
-    # model =  load_model()
+    model =  load_model()
 
     ### Keep training the model
     # history = model.fit(x=X_Train, y=Y_act_Train,
@@ -425,16 +443,18 @@ if __name__ == "__main__":
     """
 
     # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
-    # input_data = X_Train[-1, ...]
-    # input_data = tf.expand_dims(input_data, axis=0)  # Add axis for "batch_size"
-    # actual_action = Y_act_Train[-1]
-    # yhat = model.predict(input_data)
-    #
-    # print("Actual action: ", actual_action)
-    # print("Predicted action: ", yhat)
+    input_data_traj = X_train_traj[-1, ...]
+    input_data_current = X_train_current[-1, ...]
+    input_data_traj = tf.expand_dims(input_data_traj, axis=0)  # Add axis for "batch_size"
+    input_data_current = tf.expand_dims(input_data_current, axis=0)  # Add axis for "batch_size"
+    actual_action = Y_act_Train[-1]
+    yhat = model.predict([input_data_traj, input_data_current])
+
+    print("Actual action: ", actual_action)
+    print("Predicted action: ", yhat)
 
     ### Predict trajectory
-    # predict_game(model, input_data, predict_steps=5)
+    # predict_game(model, input_data_traj, predict_steps=5)
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")
