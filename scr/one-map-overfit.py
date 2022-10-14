@@ -32,7 +32,7 @@ ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
-EPOCHS = 25 # 150 (no need to have more than 150)
+EPOCHS = 50 # 150 (no need to have more than 150)
 
 MODEL_PATH = "../save_model/overfitted"
 GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
@@ -327,27 +327,43 @@ def predict_game(model, input_data, predict_steps=5):
     input_traj    = tf.cast(input_traj, tf.float32)
     input_current = tf.cast(input_current, tf.float32)
 
+    # Get initial coordinates
+    np_input_current = input_current.numpy()
+    np_player_postition = np_input_current[0, ..., 1]
+    position = list(np.where(np_player_postition == np_player_postition.max()))
+
     # Make action predictions
     predicted_actions = []
     current_player_coordinates = initial_traj_coordinates[-1].copy()
-    coordinates = [current_player_coordinates]
+    coordinates = [position] # [current_player_coordinates]
     for i in range(predict_steps):
         # Get predicted action
         predict_distribution = model.predict([input_traj, input_current])
         predicted_action = np.where(predict_distribution == predict_distribution.max())[1][0]   # Output: 0 - 3
         predicted_actions.append(predicted_action)
+        print("Predicted Action: ", predicted_action)
+
+        np_input_traj = input_traj.numpy()
+        np_input_current = input_current.numpy()
 
         # --------------------------------------------------------
         # 4.1 Update layers
         # --------------------------------------------------------
 
         # Update players coordinates
-        old_player_position = current_player_coordinates.copy()
+        old_player_position = coordinates[-1].copy()    # current_player_coordinates.copy()
         player_position = old_player_position.copy()
         if predicted_action == 0:    player_position[0] = player_position[0] - 1
         elif predicted_action == 1:  player_position[1] = player_position[1] + 1
         elif predicted_action == 2:  player_position[0] = player_position[0] + 1
         elif predicted_action == 3:  player_position[1] = player_position[1] - 1
+
+        # Check for safety (map boundaries)
+        if player_position[0] > ROW: player_position[0] = ROW
+        if player_position[0] < 0: player_position[0] = 0
+        if player_position[1] > COL: player_position[1] = COL
+        if player_position[1] < 0: player_position[1] = 0
+
         current_player_coordinates = player_position.copy()
         coordinates.append(current_player_coordinates)
 
@@ -356,6 +372,7 @@ def predict_game(model, input_data, predict_steps=5):
         # new_player_map = tf.convert_to_tensor(new_player_map, dtype=tf.float32)
 
         # Update action layers (ACTION IS ASSIGNED TO CURRENT FRAME, NOT NEW FRAME!!! So it takes old player's position)
+        # The old position is saved in Current State
         action_map = np.zeros(shape=(ROW, COL, 4))
         action_map[old_player_position[0], old_player_position[1], predicted_action] = 1
         # old_action_map = tf.convert_to_tensor(old_action_map, dtype=tf.float32)
@@ -423,17 +440,19 @@ if __name__ == "__main__":
     ### Test it on one prediction
 
     # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
-    input_data_traj = X_train_traj[-1, ...]
-    input_data_current = X_train_current[-1, ...]
+    input_data_traj = X_train_traj[-6, ...]
+    input_data_current = X_train_current[-6, ...]
     input_data_traj = tf.expand_dims(input_data_traj, axis=0)  # Add axis for "batch_size"
     input_data_current = tf.expand_dims(input_data_current, axis=0)  # Add axis for "batch_size"
-    actual_action = Y_act_Train[-1]
+    actual_action = Y_act_Train[-6]
     yhat = model.predict([input_data_traj, input_data_current])
 
+    print("Testing prediction:")
     print("Actual action: ", actual_action)
     print("Predicted action: ", yhat)
 
     ### Predict trajectory
+    print("Predict Trajectory:")
     predict_game(model, input_data_traj, predict_steps=5)
 
     print("------------------------------------")
