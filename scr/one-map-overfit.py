@@ -27,12 +27,14 @@ from ToMnet_N import Layers as L
 # --------------------------------------------------------
 # CONSTANTS and Parameters
 # --------------------------------------------------------
-BATCH_SIZE = 16
+LEARNING_RATE = 0.0001 / 5
+BATCH_SIZE = 4
 ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
-EPOCHS = 50 # 150 (no need to have more than 150)
+EPOCHS = 150 # 150 (no need to have more than 150)
+
 
 MODEL_PATH = "../save_model/overfitted"
 TESTING_GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
@@ -159,17 +161,17 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     # --------------------------------------------------------
     print("----")
     print("Create a model")
-    Learning_Rate = 0.0001
+
     t = ToMnet.ToMnet(ts=MAX_TRAJ,
                       w=ROW,
                       h=COL,
                       d=DEPTH)
     t.compile(loss='categorical_crossentropy',
-              optimizer=tf.keras.optimizers.Adam(Learning_Rate, clipnorm=1.0),
+              optimizer=tf.keras.optimizers.Adam(LEARNING_RATE, clipnorm=1.0),
               metrics=['accuracy'])
 
     t.fit(x=[X_train_traj, X_train_current], y=Y_act_Train,
-          epochs=1, batch_size=1, verbose=2)
+          epochs=1, batch_size=BATCH_SIZE, verbose=2)
 
     t.summary()
 
@@ -464,37 +466,37 @@ if __name__ == "__main__":
 
     ### Load data
     X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH,
-                                                                     load_percentage=0.0002) # 0.1% = 5 games. 0.02% = 1 game
+                                                                     load_percentage=0.001) # 0.1% = 5 games. 0.02% = 1 game
 
     ### Train the model
     train_model(X_train_traj, X_train_current, Y_act_Train)
 
     ### Use trained model
-    model =  load_model()
-
-    ### Keep training the model
-    # history = model.fit(x=X_Train, y=Y_act_Train,
-    #                 epochs=EPOCHS, batch_size=1, verbose=2)
-    # plot_history(history)
-
-    ### Test it on one prediction
-    X_train_traj, X_train_current, Y_act_Train = load_one_game(directory=TESTING_GAME_PATH) # To test I load one single game
-
-    # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
-    input_data_traj = X_train_traj[-6, ...]
-    input_data_current = X_train_current[-6, ...]
-    input_data_traj = tf.expand_dims(input_data_traj, axis=0)  # Add axis for "batch_size"
-    input_data_current = tf.expand_dims(input_data_current, axis=0)  # Add axis for "batch_size"
-    actual_action = Y_act_Train[-6]
-    yhat = model.predict([input_data_traj, input_data_current])
-
-    print("Testing prediction:")
-    print("Actual action: ", actual_action)
-    print("Predicted action: ", yhat)
-
-    ### Predict trajectory
-    print("Predict Trajectory:")
-    predict_game(model, input_data_traj, predict_steps=5)
+    # model =  load_model()
+    #
+    # ### Keep training the model
+    # # history = model.fit(x=X_Train, y=Y_act_Train,
+    # #                 epochs=EPOCHS, batch_size=1, verbose=2)
+    # # plot_history(history)
+    #
+    # ### Test it on one prediction
+    # X_train_traj, X_train_current, Y_act_Train = load_one_game(directory=TESTING_GAME_PATH) # To test I load one single game
+    #
+    # # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
+    # input_data_traj = X_train_traj[-6, ...]
+    # input_data_current = X_train_current[-6, ...]
+    # input_data_traj = tf.expand_dims(input_data_traj, axis=0)  # Add axis for "batch_size"
+    # input_data_current = tf.expand_dims(input_data_current, axis=0)  # Add axis for "batch_size"
+    # actual_action = Y_act_Train[-6]
+    # yhat = model.predict([input_data_traj, input_data_current])
+    #
+    # print("Testing prediction:")
+    # print("Actual action: ", actual_action)
+    # print("Predicted action: ", yhat)
+    #
+    # ### Predict trajectory
+    # print("Predict Trajectory:")
+    # predict_game(model, input_data_traj, predict_steps=5)
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")
