@@ -66,7 +66,7 @@ def dict_to_tensors(Dict):
 def save_game_to_draw(full_trajectory, predicted_actions):
     print("Puk-puk")
 
-def load_training_games(directory):
+def load_training_games(directory, load_percentage=0.2):
     # --------------------------------------------------------
     # 1. Load Data
     # --------------------------------------------------------
@@ -81,7 +81,7 @@ def load_training_games(directory):
     #     "current_state_history": current_state_history,
     #     "actions_history": actions_history
     # }
-    all_games = data_handler.load_all_games_v2(directory=directory)
+    all_games = data_handler.load_all_games_v2(directory=directory, use_percentage=load_percentage)
 
     # --------------------------------------------------------
     # 2. Pre-process data - Zero Padding
@@ -95,10 +95,10 @@ def load_training_games(directory):
                                                 all_games=all_games)
 
     # Make Tensors from List
-    indices = [x - 1 for x in single_game["ToM"]["actions_history"]]  # 1-4 --> 0-3
+    indices = all_games["actions_history"] - 1  # 1-4 --> 0-3
     depth = 4
-    X_train_traj = tf.convert_to_tensor(single_game["ToM"]["traj_history_zp"], dtype=tf.float32)
-    X_train_current = tf.convert_to_tensor(single_game["ToM"]["current_state_history"], dtype=tf.float32)
+    X_train_traj = tf.convert_to_tensor(all_games["traj_history_zp"], dtype=tf.float32)
+    X_train_current = tf.convert_to_tensor(all_games["current_state_history"], dtype=tf.float32)
     Y_act_Train = tf.one_hot(indices, depth)
 
     # return X_Train, Y_act_Train
@@ -398,9 +398,9 @@ def predict_game(model, input_data, predict_steps=5):
         elif predicted_action == 3:  player_position[1] = player_position[1] - 1
 
         # Check for safety (map boundaries)
-        if player_position[0] > ROW: player_position[0] = ROW
+        if player_position[0] > ROW-1: player_position[0] = ROW-1
         if player_position[0] < 0: player_position[0] = 0
-        if player_position[1] > COL: player_position[1] = COL
+        if player_position[1] > COL-1: player_position[1] = COL-1
         if player_position[1] < 0: player_position[1] = 0
 
         current_player_coordinates = player_position.copy()
@@ -463,7 +463,8 @@ if __name__ == "__main__":
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
     ### Load data
-    X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH)
+    X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH,
+                                                                     load_percentage=0.0002) # 0.1% = 5 games. 0.02% = 1 game
 
     ### Train the model
     train_model(X_train_traj, X_train_current, Y_act_Train)
