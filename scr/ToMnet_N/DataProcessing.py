@@ -104,6 +104,67 @@ class DataProcessor:
 
         return DataZeroPad
 
+        # It adds zeros at the beginning of the trajectories
+    def zero_padding_v2(self, max_elements, all_games):
+
+        # all_games = {
+        #     "traj_history": traj_history,
+        #     "traj_history_zp": traj_history_zp                    # Trajectory with Zero Padding
+        #     "current_state_history": current_state_history,
+        #     "actions_history": actions_history
+        # }
+
+        uniform_shape = (1, max_elements, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH)
+
+        zero_padded_trajectories = []   # ndarray, not list
+        all_trajectories = all_games["traj_history"]
+        N_all_games = len(all_trajectories)
+
+        # Go one by one game
+        # Where each game consist of many trajectories
+        tracker_var = 0
+        for i in range(N_all_games):
+
+            traj = all_trajectories[i]
+            N_traj = len(traj) # traj.shape[0]      # Number of trajectories in current game
+            TrajZeroPad = []    # ndarray, not list
+
+            for j in range(N_traj):
+                zero_pad_trajectory = np.zeros(shape=uniform_shape)
+                current_trajectory = traj[j]
+                Nt = current_trajectory.shape[0]  # Number of real steps in the trajectory
+
+                # Save game in a bigger array so the rest is fiiled with zeros
+                if Nt > max_elements:
+                    zero_pad_trajectory[0, ...] = current_trajectory[-max_elements:]
+                else:
+                    zero_pad_trajectory[0, 0:Nt, ...] = current_trajectory
+
+                # Append the trajectory to others from this one game
+                if j == 0:
+                    TrajZeroPad = zero_pad_trajectory
+                else:
+                    TrajZeroPad = np.concatenate([TrajZeroPad, zero_pad_trajectory], axis=0)
+
+            # Append all zero-padded trajectories from one game to the general data structure
+            if i == 0:
+                zero_padded_trajectories = TrajZeroPad
+            else:
+                zero_padded_trajectories = np.concatenate([zero_padded_trajectories, TrajZeroPad], axis=0)
+
+            # Keep track on progress
+            if i >= int(N_all_games * tracker_var / 100):
+                print('Zero-Padded data ' + str(tracker_var) + '%')
+                tracker_var += 5
+
+        all_games["traj_history"] = zero_padded_trajectories
+
+        print(all_games["traj_history"].shape)
+
+        print("Zero Padding was applied!")
+
+        return all_games
+
     # Traj: 20x12x12x10
     # Cur: 12x12x6
     # ToMnet input: 21x12x12x10

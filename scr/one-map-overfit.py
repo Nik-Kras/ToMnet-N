@@ -35,7 +35,8 @@ MAX_TRAJ = 15
 EPOCHS = 50 # 150 (no need to have more than 150)
 
 MODEL_PATH = "../save_model/overfitted"
-GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
+TESTING_GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
+TRAINING_GAMES_PATH = os.path.join('..', 'data', 'Saved Games', 'Experiment 2')
 
 def dict_to_tensors(Dict):
 
@@ -65,7 +66,45 @@ def dict_to_tensors(Dict):
 def save_game_to_draw(full_trajectory, predicted_actions):
     print("Puk-puk")
 
-def load_data(directory):
+def load_training_games(directory):
+    # --------------------------------------------------------
+    # 1. Load Data
+    # --------------------------------------------------------
+    data_handler = DataLoader.DataHandler(ts=MAX_TRAJ,
+                                          w=ROW,
+                                          h=COL,
+                                          d=DEPTH)
+    #
+    # all_games = {
+    #     "traj_history": traj_history,
+    #     "traj_history_zp": traj_history_zp                    # Trajectory with Zero Padding
+    #     "current_state_history": current_state_history,
+    #     "actions_history": actions_history
+    # }
+    all_games = data_handler.load_all_games_v2(directory=directory)
+
+    # --------------------------------------------------------
+    # 2. Pre-process data - Zero Padding
+    # --------------------------------------------------------
+    data_processor = DataProcessing.DataProcessor(ts=MAX_TRAJ,
+                                                  w=ROW,
+                                                  h=COL,
+                                                  d=DEPTH)
+
+    all_games = data_processor.zero_padding_v2(max_elements=MAX_TRAJ,
+                                                all_games=all_games)
+
+    # Make Tensors from List
+    indices = [x - 1 for x in single_game["ToM"]["actions_history"]]  # 1-4 --> 0-3
+    depth = 4
+    X_train_traj = tf.convert_to_tensor(single_game["ToM"]["traj_history_zp"], dtype=tf.float32)
+    X_train_current = tf.convert_to_tensor(single_game["ToM"]["current_state_history"], dtype=tf.float32)
+    Y_act_Train = tf.one_hot(indices, depth)
+
+    # return X_Train, Y_act_Train
+    return X_train_traj, X_train_current, Y_act_Train
+
+def load_one_game(directory):
     # --------------------------------------------------------
     # 1. Load Data
     # --------------------------------------------------------
@@ -257,7 +296,7 @@ def predict_game(model, input_data, predict_steps=5):
             TS = i
             break
 
-    print(full_traj_actions)
+    print("Full trajectory in actions: ", full_traj_actions)
 
     # Find initial position
     initial_coordinates = list(np.where(player_layer == 1))
@@ -288,7 +327,7 @@ def predict_game(model, input_data, predict_steps=5):
 
         full_traj_coordinates.append(coordinates)
 
-    print(full_traj_coordinates)
+    print("Full trajectory in coordinates: ", full_traj_coordinates)
     full_traj_coordinates_df = pd.DataFrame(full_traj_coordinates)
     full_traj_coordinates_df.to_csv(path_to_save + str("full_traj.csv"))
 
@@ -424,10 +463,10 @@ if __name__ == "__main__":
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
     ### Load data
-    X_train_traj, X_train_current, Y_act_Train = load_data(directory=GAME_PATH)
+    X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH)
 
     ### Train the model
-    # train_model(X_train_traj, X_train_current, Y_act_Train)
+    train_model(X_train_traj, X_train_current, Y_act_Train)
 
     ### Use trained model
     model =  load_model()
@@ -438,6 +477,7 @@ if __name__ == "__main__":
     # plot_history(history)
 
     ### Test it on one prediction
+    X_train_traj, X_train_current, Y_act_Train = load_one_game(directory=TESTING_GAME_PATH) # To test I load one single game
 
     # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
     input_data_traj = X_train_traj[-6, ...]

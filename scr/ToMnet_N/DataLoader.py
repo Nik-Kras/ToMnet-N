@@ -133,6 +133,99 @@ class DataHandler:
                train_goal, test_goal, valid_goal, \
                train_act,  test_act,  valid_act
 
+    def load_all_games_v2(self, directory, use_percentage = 1.0):
+
+        # Get names of games
+        files = os.listdir(directory)
+        r = re.compile(".*.txt")
+        files = list(filter(r.match, files))
+        Nfiles = len(files)
+        Nfraction = int(np.ceil(use_percentage * Nfiles))  # Apply a fraction division
+        files = files[:Nfraction]
+        print("----")
+        print("Saved Games found: ", Nfiles)
+        print("Saved Games loaded: ", Nfraction)
+        print("Percentage of loaded games: ", use_percentage * 100, "%")
+        print("Games names: ", files)
+
+        # Save all trajectories and labels
+        trajectories = []  # np.empty([1, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY])
+        actions = []  # np.empty(1)
+        labels = []  # np.empty(1)
+
+        # ------------------------------------------------------------------
+        # 1. Load each game one by one
+        # ------------------------------------------------------------------
+        j = 0  # for tracking progress (%)
+        for i, file in enumerate(files):
+
+            # Read one game
+            traj, act, goal = self.read_one_game(filename=os.path.join(directory, file))
+
+            # Append a game to data
+            trajectories.append(traj)
+            actions.append(act)
+            labels.append(goal)
+
+            # Keep track on progress
+            if i >= int(np.ceil(j * Nfraction / 100)) - 1:
+                print('Parsed ' + str(j) + '%')
+                j += 10
+        print("----")
+
+        # ------------------------------------------------------------------
+        # 2. Make many Trajectory-Current state pairs from all  games
+        # ------------------------------------------------------------------
+        print("Augment data. One game creates many training samples!")
+
+        data_trajectories = []
+        data_current_state = []
+        data_actions = []
+        data_labels = []
+        j = 0  # for tracking progress (%)
+
+        # Process Game-per-Game
+        for i in range(Nfraction):
+
+            # Consider only games with more than 6 moves
+            if trajectories[i].shape[0] < 6:
+                continue
+
+            # Prepare data from one game
+            # The dimensions differ, so only list is applicable (no numpy arrays)
+            data_trajectories1, data_current_state1, \
+            data_actions1, data_labels1 = self.generate_data_from_game(
+                trajectories=trajectories[i],
+                actions=actions[i],
+                labels=labels[i])
+
+            # Append to a single structure
+            data_trajectories.append(data_trajectories1)
+            data_current_state.append(data_current_state1)
+            data_actions.append(data_actions1)
+            data_labels.append(data_labels1)
+
+            # Keep track on progress
+            if i >= int(np.ceil(j * Nfraction / 100)) - 1:
+                print('Augmented data ' + str(j) + '%')
+                j += 10
+
+        print("----")
+
+        # ------------------------------------------------------------------
+        # 2. Putting all data together
+        # ------------------------------------------------------------------
+
+        # data_trajectories1 shape is ()
+        all_games = {
+            "traj_history": data_trajectories,
+            "current_state_history": data_current_state,
+            "actions_history": data_actions
+        }
+
+        return all_games
+
+
     def load_one_game(self, directory):
 
         files = os.listdir(directory)
