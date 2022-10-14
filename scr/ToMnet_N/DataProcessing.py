@@ -40,7 +40,7 @@ class DataProcessor:
     def zero_pad_single_game(self, max_elements, single_game):
 
         # A single game has several trajectories
-        all_trajectories = single_game["ToM"]["united_input"]
+        all_trajectories = single_game["ToM"]["traj_history"]
         N = len(all_trajectories)
         TrajZeroPad = []
 
@@ -57,7 +57,7 @@ class DataProcessor:
                 zero_pad_trajectory[:Nt, ...] = current_trajectory
             TrajZeroPad.append(zero_pad_trajectory)
 
-        single_game["ToM"]["input_predict"] = TrajZeroPad
+        single_game["ToM"]["traj_history_zp"] = TrajZeroPad
 
         return single_game
 

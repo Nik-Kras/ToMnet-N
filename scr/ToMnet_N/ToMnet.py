@@ -43,13 +43,13 @@ class ToMnet(Model):
 
         # Set compilers / savers / loggers / callbacks
 
-    def call(self, inputs):
+    def call(self, data):
 
         # To fix ERROR with Tensor <-> Numpy compatibility
         tf.compat.v1.enable_eager_execution()
 
-        input_trajectory = inputs[..., 0:self.MAX_TRAJECTORY_SIZE, :, :, :]
-        input_current_state = inputs[..., self.MAX_TRAJECTORY_SIZE, :, :, 0:6]
+        input_trajectory = data[0]   # input_traj            # inputs[..., 0:self.MAX_TRAJECTORY_SIZE, :, :, :]
+        input_current_state = data[1] #  input_current    # inputs[..., self.MAX_TRAJECTORY_SIZE, :, :, 0:6]
 
         e_char = self.char_net(input_trajectory)
 
@@ -82,6 +82,7 @@ class ToMnet(Model):
         e_char_new = tf.expand_dims(e_char_new, axis=-1)
         print("e_char_new: ", e_char_new.shape)
         print("input_current_state: ", input_current_state.shape)
+        input_current_state = tf.cast(input_current_state, tf.float32)
 
         mix_data = tf.keras.layers.Concatenate(axis=-1)([input_current_state, e_char_new])
 
