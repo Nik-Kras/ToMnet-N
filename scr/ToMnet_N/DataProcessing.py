@@ -142,15 +142,15 @@ class DataProcessor:
 
                 # Append the trajectory to others from this one game
                 if j == 0:
-                    TrajZeroPad = zero_pad_trajectory
+                    zero_padded_trajectories = zero_pad_trajectory
                 else:
-                    TrajZeroPad = np.concatenate([TrajZeroPad, zero_pad_trajectory], axis=0)
+                    zero_padded_trajectories = np.concatenate([zero_padded_trajectories, zero_pad_trajectory], axis=0)
 
-            # Append all zero-padded trajectories from one game to the general data structure
-            if i == 0:
-                zero_padded_trajectories = TrajZeroPad
-            else:
-                zero_padded_trajectories = np.concatenate([zero_padded_trajectories, TrajZeroPad], axis=0)
+            # # Append all zero-padded trajectories from one game to the general data structure
+            # if i == 0:
+            #     zero_padded_trajectories = TrajZeroPad
+            # else:
+            #     zero_padded_trajectories = np.concatenate([zero_padded_trajectories, TrajZeroPad], axis=0)
 
             # Keep track on progress
             if i >= int(N_all_games * tracker_var / 100):
