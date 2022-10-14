@@ -32,7 +32,7 @@ ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
-EPOCHS = 50 # 150 (no need to have more than 150)
+EPOCHS = 25 # 150 (no need to have more than 150)
 
 MODEL_PATH = "../save_model/overfitted"
 GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
@@ -106,8 +106,8 @@ def load_data(directory):
     # Make Tensors from List
     indices = [x - 1 for x in single_game["ToM"]["actions_history"]]  # 1-4 --> 0-3
     depth = 4
-    X_train_traj = tf.convert_to_tensor(single_game["ToM"]["traj_history_zp"])
-    X_train_current = tf.convert_to_tensor(single_game["ToM"]["current_state_history"])
+    X_train_traj = tf.convert_to_tensor(single_game["ToM"]["traj_history_zp"], dtype=tf.float32)
+    X_train_current = tf.convert_to_tensor(single_game["ToM"]["current_state_history"], dtype=tf.float32)
     Y_act_Train = tf.one_hot(indices, depth)
 
     # return X_Train, Y_act_Train
@@ -180,6 +180,9 @@ def load_model():
     }
     return tf.keras.models.load_model(MODEL_PATH, custom_objects=custom_layers)
 
+# I am only sending a trajectory here
+# This trajectory will be divided to Traj and Current state
+# And therefore coordinates will be calculated
 def predict_game(model, input_data, predict_steps=5):
 
     # Trajectory Depth saved as - (np_obstacles, np_agent, np_targets, np_actions)
@@ -312,7 +315,7 @@ def predict_game(model, input_data, predict_steps=5):
 
     # Traj -> Traj_zero_pad + current state
     input_traj = tf.cast(input_data[0, 0:-predict_steps, ...], tf.float32)
-    input_current = tf.cast(input_data[0, -predict_steps, ...], tf.float32)
+    input_current = tf.cast(input_data[0, -predict_steps, ..., 0:6], tf.float32)
     NeededZeros = MAX_TRAJ - input_traj.shape[0] # Add Zeros up to MAX_TRAJ
     if NeededZeros > 0:
         zero_pad_shape = (NeededZeros, ROW, COL, DEPTH)
@@ -321,28 +324,26 @@ def predict_game(model, input_data, predict_steps=5):
     input_traj = tf.expand_dims(input_traj, axis=0)
     input_current = tf.expand_dims(input_current, axis=0)
 
-    # Initial trajectory for ToMnet
-    zero_pad_shape = (predict_steps, ROW, COL, DEPTH)
-    zaro_pad = tf.cast(tf.zeros(shape=zero_pad_shape), tf.float32)                  # For concat        #
-    input_to_concat = tf.cast(input_data[0, 0:-predict_steps, ...], tf.float32)     # Data must be the same dtype
-    initial_input_data = tf.concat(values=[input_to_concat, zaro_pad], axis=0)
-    initial_input_data = tf.expand_dims(initial_input_data, axis=0)
-    print("input_data shape: ", input_data.shape)
-    print("initial_input_data shape: ", initial_input_data.shape)
+    input_traj    = tf.cast(input_traj, tf.float32)
+    input_current = tf.cast(input_current, tf.float32)
 
     # Make action predictions
     predicted_actions = []
     current_player_coordinates = initial_traj_coordinates[-1].copy()
     coordinates = [current_player_coordinates]
-    input_data = initial_input_data
     for i in range(predict_steps):
         # Get predicted action
-        predict_distribution = model.predict(input_data)
+        predict_distribution = model.predict([input_traj, input_current])
         predicted_action = np.where(predict_distribution == predict_distribution.max())[1][0]   # Output: 0 - 3
         predicted_actions.append(predicted_action)
 
+        # --------------------------------------------------------
+        # 4.1 Update layers
+        # --------------------------------------------------------
+
         # Update players coordinates
-        player_position = current_player_coordinates.copy()
+        old_player_position = current_player_coordinates.copy()
+        player_position = old_player_position.copy()
         if predicted_action == 0:    player_position[0] = player_position[0] - 1
         elif predicted_action == 1:  player_position[1] = player_position[1] + 1
         elif predicted_action == 2:  player_position[0] = player_position[0] + 1
@@ -352,46 +353,48 @@ def predict_game(model, input_data, predict_steps=5):
 
         new_player_map = np.zeros(shape=(ROW, COL, 1))
         new_player_map[player_position[0], player_position[1], 0] = 1
-        new_player_map = tf.convert_to_tensor(new_player_map, dtype=tf.float32)
+        # new_player_map = tf.convert_to_tensor(new_player_map, dtype=tf.float32)
 
-        # Update action layers (ACTION IS ASSIGNED TO CURRENT FRAME, NOT NEW FRAME!!!)
-        new_action_map = tf.zeros(shape=(ROW, COL, 4), dtype=tf.float32)
-        old_action_map = np.zeros(shape=(ROW, COL, 4))
-        old_action_map[player_position[0], player_position[1], predicted_action] = 1
-        old_action_map = tf.convert_to_tensor(old_action_map, dtype=tf.float32)
+        # Update action layers (ACTION IS ASSIGNED TO CURRENT FRAME, NOT NEW FRAME!!! So it takes old player's position)
+        action_map = np.zeros(shape=(ROW, COL, 4))
+        action_map[old_player_position[0], old_player_position[1], predicted_action] = 1
+        # old_action_map = tf.convert_to_tensor(old_action_map, dtype=tf.float32)
 
         # Get wall layer
-        wall_map = initial_input_data[0, 0, ..., 0]
+        wall_map = input_traj[0, 0, ..., 0]
         wall_map = tf.expand_dims(wall_map, axis=-1)
+        np_wall_map = wall_map.numpy()
 
         # Get goals map
-        goal_map = initial_input_data[0, 0, ..., 2:6]
+        goal_map = input_traj[0, 0, ..., 2:6]
+        np_goal_map = goal_map.numpy()
 
-        # Update current frame (Add assigned action to it!)
-        steps_unfound = -predict_steps + i  # -5 -> none were found. -1 -> one is left to be found
-        updated_traj = input_data[0, 0:steps_unfound, ...].numpy()
-        updated_traj[-1, ..., 6:10] = old_action_map
-        updated_traj = tf.convert_to_tensor(updated_traj, dtype=tf.float32)
+        # --------------------------------------------------------
+        # 4.2 Update Trajectory
+        # --------------------------------------------------------
+        # Indexes:  traj1, traj2, traj3, traj4, traj5, zp,    zp, zp, zp, zp
+        # Become:   traj1, traj2, traj3, traj4, traj5, traj6, zp, zp, zp, zp
+        # Initial number of zp = predict_steps
+        # It decreases with increasing of i
+        # Therefore I must update input_traj[0, -predict_step+i, ...]
 
-        # Create new frame
-        new_frame = tf.concat(values=[wall_map, new_player_map, goal_map, new_action_map], axis=-1)
-        new_frame = tf.expand_dims(new_frame, axis=0)
+        np_current_state = np.copy(input_current.numpy())
+        np_current_state = np_current_state[0, ...]   # Here I have walls, player and goals for a trajectory frame
 
-        # Update input data trajectory with a new frame instead of zero-pad layer
-        new_traj = tf.concat(values=[updated_traj, new_frame], axis=0)
-        NeededZeros = MAX_TRAJ - new_traj.shape[0] # Add Zeros up to MAX_TRAJ
+        upd_ind = -predict_steps+i
+        np_input_traj = input_traj.numpy()
+        np_input_traj[0, upd_ind, ...] = np.concatenate((np_current_state, action_map), axis=-1)
+        input_traj = tf.convert_to_tensor(np_input_traj, dtype=tf.float32)
 
-        if NeededZeros > 0:
-            zero_pad_shape = (NeededZeros, ROW, COL, DEPTH)
-            zero_pad = tf.zeros(shape=zero_pad_shape, dtype=tf.float32)
-            input_data = tf.concat(values=[new_traj, zero_pad], axis=0)
-        else:
-            input_data = new_traj
-        input_data = tf.expand_dims(input_data, axis=0) # Add Batch Shape dim
+        # --------------------------------------------------------
+        # 4.3 Update Current State
+        # --------------------------------------------------------
 
-        input_data.numpy() # For debug
+        new_current_state = np.concatenate((np_wall_map, new_player_map, np_goal_map), axis=-1)
+        new_current_state = tf.convert_to_tensor(new_current_state, dtype=tf.float32)
+        new_current_state = tf.expand_dims(new_current_state, axis=0)
 
-        input_data = tf.convert_to_tensor(input_data, dtype=tf.float32)
+        input_current = new_current_state
 
     coordinates_df = pd.DataFrame(coordinates)
     coordinates_df.to_csv(path_to_save + str("predicted_traj.csv"))
@@ -406,11 +409,8 @@ if __name__ == "__main__":
     ### Load data
     X_train_traj, X_train_current, Y_act_Train = load_data(directory=GAME_PATH)
 
-    # x_debug = X_train_traj.numpy()
-    # x_debug = X_train_current.numpy()
-
     ### Train the model
-    train_model(X_train_traj, X_train_current, Y_act_Train)
+    # train_model(X_train_traj, X_train_current, Y_act_Train)
 
     ### Use trained model
     model =  load_model()
@@ -421,26 +421,6 @@ if __name__ == "__main__":
     # plot_history(history)
 
     ### Test it on one prediction
-
-    """
-    # Find an index for a random game longer than 10 steps
-    N_trajectories = X_Train.shape[0]  # Number of whole trajectories saved from all games
-    N = 0
-    random_inx = 0
-    while N < 10:
-        random_inx = np.random.randint(0, N_trajectories-1)
-        input_data = X_Train[random_inx, ...]
-
-        # Measure real length of the traj (without Zero-Padding)
-        for i in range(input_data.shape[0]):
-            N = i
-            # Check the presence of player's position on the map
-            player_layer = np.array(input_data[i, ..., 1], dtype=np.int8)
-            bool_val = 1 in player_layer  # np.where(n_array == 1) # Should also work
-            bool_val = np.any(bool_val)
-            if bool_val:
-                pass
-    """
 
     # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
     input_data_traj = X_train_traj[-1, ...]
@@ -454,7 +434,7 @@ if __name__ == "__main__":
     print("Predicted action: ", yhat)
 
     ### Predict trajectory
-    # predict_game(model, input_data_traj, predict_steps=5)
+    predict_game(model, input_data_traj, predict_steps=5)
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")
