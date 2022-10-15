@@ -37,7 +37,7 @@ DEPTH = 10
 MAX_TRAJ = 15
 EPOCHS = 100 # 150 (no need to have more than 150)
 
-LOAD_PERCENTAGE = 0.05 # 0.1% = 5 games. 0.02% = 1 game
+LOAD_PERCENTAGE = 0.001 # 0.1% = 5 games. 0.02% = 1 game
 
 
 MODEL_PATH = "../save_model/overfitted"
@@ -76,7 +76,7 @@ def load_training_games(directory, load_percentage=0.2):
                                                 all_games=all_games)
 
     # Make Tensors from List
-    indices = all_games["actions_history"]  # 1-4 --> 0-3
+    indices = all_games["actions_history"]
     depth = 4
     X_train_traj = tf.convert_to_tensor(all_games["traj_history_zp"], dtype=tf.float32)
     X_train_current = tf.convert_to_tensor(all_games["current_state_history"], dtype=tf.float32)
@@ -449,7 +449,6 @@ if __name__ == "__main__":
     ### Load data
     X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH,
                                                                      load_percentage=LOAD_PERCENTAGE)
-    print(Y_act_Train)
     ### Train the model
     train_model(X_train_traj, X_train_current, Y_act_Train)
 
