@@ -35,12 +35,12 @@ ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
-EPOCHS = 100 # 150 (no need to have more than 150)
+EPOCHS = 15 # 150 (no need to have more than 150)
 
-LOAD_PERCENTAGE = 0.05 # 0.1% = 5 games. 0.02% = 1 game
+LOAD_PERCENTAGE = 0.01 # 0.1% = 5 games. 0.02% = 1 game
 
 
-MODEL_PATH = "../save_model/overfitted"
+MODEL_PATH = "../save_model/Experiment 2"
 TESTING_GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
 TRAINING_GAMES_PATH = os.path.join('..', 'data', 'Saved Games', 'Experiment 2')
 
@@ -160,13 +160,27 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     # --------------------------------------------------------
     # 4. Train the model
     # --------------------------------------------------------
+    checkpoint_filepath = "../save_model/Experiment2_CheckPoints"
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_filepath,
+        # save_weights_only=True,
+        monitor='val_accuracy',
+        mode='max',
+        save_best_only=True,
+        verbose = 1
+    )
+
     print("Train a Model")
     history = t.fit(x=[X_train_traj, X_train_current], y=Y_act_Train,
-                    epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=2)
+                    epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=2,
+                    validation_split = 0.2,
+                    callbacks=[model_checkpoint_callback])
     plot_history(history)
     save_history(history)
 
-    # t.save(MODEL_PATH)
+    print("Saving a model!")
+
+    t.save(MODEL_PATH)
 
 def plot_history(history):
 
@@ -179,6 +193,16 @@ def plot_history(history):
         np.arange(1, EPOCHS + 1),
         history.history['accuracy'],
         label='Accuracy', lw=3
+    )
+    plt.plot(
+        np.arange(1, EPOCHS + 1),
+        history.history['val_loss'],
+        label='val_Loss', lw=3
+    )
+    plt.plot(
+        np.arange(1, EPOCHS + 1),
+        history.history['val_accuracy'],
+        label='val_Accuracy', lw=3
     )
 
     plt.title('Evaluation metrics', size=20)

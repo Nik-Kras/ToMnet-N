@@ -52,12 +52,12 @@ class ToMnet(Model):
 
         e_char = self.char_net(input_trajectory)
 
-        print("In ToMnet-N: ")
-        print("input_trajectory: ", input_trajectory.shape)
-        print("input_current_state: ", input_current_state.shape)
-        print("e_char SHAPE: ", e_char.shape)
-        print("e_char TYPE", type(e_char))
-        print("e_char", e_char)
+        # print("In ToMnet-N: ")
+        # print("input_trajectory: ", input_trajectory.shape)
+        # print("input_current_state: ", input_current_state.shape)
+        # print("e_char SHAPE: ", e_char.shape)
+        # print("e_char TYPE", type(e_char))
+        # print("e_char", e_char)
 
         # --------------------------------------------------------------
         # Paper codes
@@ -70,8 +70,8 @@ class ToMnet(Model):
         # --------------------------------------------------------------
         e_char_new = tf.concat(values=[e_char,e_char], axis = 1) # tf.repeat(e_char, repeats=2, axis=-1)
         e_char_new = e_char_new[..., 0:12]
-        print("Before Concatenation: ", e_char.shape)
-        print("After Concatenation: ", e_char_new.shape)
+        # print("Before Concatenation: ", e_char.shape)
+        # print("After Concatenation: ", e_char_new.shape)
 
         # print("e_char_new: ", e_char_new.shape)
         e_char_new = tf.expand_dims(e_char_new, axis=-1)
@@ -79,13 +79,13 @@ class ToMnet(Model):
         e_char_new = tf.repeat(e_char_new, repeats=12, axis=-1)
         # print("e_char_new: ", e_char_new.shape)
         e_char_new = tf.expand_dims(e_char_new, axis=-1)
-        print("e_char_new: ", e_char_new.shape)
-        print("input_current_state: ", input_current_state.shape)
+        # print("e_char_new: ", e_char_new.shape)
+        # print("input_current_state: ", input_current_state.shape)
         input_current_state = tf.cast(input_current_state, tf.float32)
 
         mix_data = tf.keras.layers.Concatenate(axis=-1)([input_current_state, e_char_new])
 
-        print("mix_data (pred input): ", mix_data.shape)
+        # print("mix_data (pred input): ", mix_data.shape)
 
         pred = self.pred_net(mix_data)
         output = pred
