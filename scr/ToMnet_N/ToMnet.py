@@ -14,21 +14,19 @@ from ToMnet_N.CharNet import *
 from ToMnet_N.PredNet import *
 
 class ToMnet(Model):
-    BATCH_SIZE = 16
 
     LENGTH_E_CHAR = 8
     NUM_RESIDUAL_BLOCKS = 8
 
-    TRAIN_EMA_DECAY = 0.95
-    INIT_LR = 0.0001
-
-    def __init__(self, ts, w, h, d):
+    def __init__(self, ts, w, h, d, Ne_char=8, N_res_blocks=8, filters=32):
         super(ToMnet, self).__init__(name="ToMnet-N")
 
         self.MAX_TRAJECTORY_SIZE = ts  # 20-50
         self.MAZE_WIDTH = w  # 12
         self.MAZE_HEIGHT = h  # 12
         self.MAZE_DEPTH_TRAJECTORY = d  # 10
+        self.LENGTH_E_CHAR = Ne_char
+        self.NUM_RESIDUAL_BLOCKS = N_res_blocks
 
         self.INPUT_SHAPE = (self.MAX_TRAJECTORY_SIZE+1, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY)
         self.TRAJECTORY_SHAPE = (self.MAX_TRAJECTORY_SIZE, self.MAZE_WIDTH, self.MAZE_HEIGHT, self.MAZE_DEPTH_TRAJECTORY) # 20x12x12x10
@@ -37,9 +35,10 @@ class ToMnet(Model):
         # Create the model
         self.char_net = CharNet(input_tensor=self.TRAJECTORY_SHAPE,
                                 n=self.NUM_RESIDUAL_BLOCKS,
-                                N_echar=self.LENGTH_E_CHAR)
+                                N_echar=self.LENGTH_E_CHAR,
+                                filters=filters)
 
-        self.pred_net = PredNet(n=self.NUM_RESIDUAL_BLOCKS)
+        self.pred_net = PredNet(n=self.NUM_RESIDUAL_BLOCKS, filters=filters)
 
         # Set compilers / savers / loggers / callbacks
 

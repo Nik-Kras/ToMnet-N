@@ -37,18 +37,18 @@ from ToMnet_N.Layers import * # CustomCnnCharNet, ResBlockCharNet, CustomLSTM
 # --------------------------------------------------------------
 class PredNet(keras.layers.Layer):
 
-    def __init__(self, n):
+    def __init__(self, n, filters=32):
         super(PredNet, self).__init__()
         self.n = n
 
         self.e_char_shape = 8
         self.current_state_shape = (12, 12, 6)
 
-        self.conv_1 = CustomCnnPredNet(input_tensor=self.current_state_shape)
+        self.conv_1 = CustomCnnPredNet(input_tensor=self.current_state_shape, filters=filters)
         self.res_blocks = [None] * n
         for i in range(n):
-          self.res_blocks[i] = ResBlockPredNet()
-        self.conv_2 = CustomCnnPredNet(activation='relu')
+          self.res_blocks[i] = ResBlockPredNet(filters=filters)
+        self.conv_2 = CustomCnnPredNet(activation='relu', filters=filters)
         self.fc1 = Dense(units=128, activation=activations.relu)
         self.fc2 = Dense(units=128, activation=activations.relu)
         self.fc3 = Dense(units=64, activation=activations.relu)

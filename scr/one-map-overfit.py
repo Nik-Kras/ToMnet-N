@@ -27,6 +27,8 @@ from ToMnet_N import Layers as L
 # --------------------------------------------------------
 # CONSTANTS and Parameters
 # --------------------------------------------------------
+N_ECHAR = 8
+N_RESBLOCKS = 32
 LEARNING_RATE = 0.0001 / 5
 BATCH_SIZE = 4
 ROW = 12
@@ -165,7 +167,10 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     t = ToMnet.ToMnet(ts=MAX_TRAJ,
                       w=ROW,
                       h=COL,
-                      d=DEPTH)
+                      d=DEPTH,
+                      Ne_char=N_ECHAR,
+                      N_res_blocks=N_RESBLOCKS,
+                      filters=64)
     t.compile(loss='categorical_crossentropy',
               optimizer=tf.keras.optimizers.Adam(LEARNING_RATE, clipnorm=1.0),
               metrics=['accuracy'])
@@ -184,7 +189,7 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     plot_history(history)
     save_history(history)
 
-    t.save(MODEL_PATH)
+    # t.save(MODEL_PATH)
 
 def plot_history(history):
 

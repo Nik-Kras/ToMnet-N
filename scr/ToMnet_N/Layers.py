@@ -72,18 +72,18 @@ def CustomCnnPredNet(input_tensor=None, activation="linear", filters=32, **kwarg
     return CustomCnn(input_tensor=input_tensor, activation=activation, filters=filters, UseTimeWrapper=False, **kwargs)
 
 class ResBlock(keras.layers.Layer):
-    def __init__(self, UseTimeWrapper=False, **kwargs):
+    def __init__(self, UseTimeWrapper=False, filters=32, **kwargs):
         super(ResBlock, self).__init__(**kwargs)
         self.bn1 = tf.keras.layers.BatchNormalization()
         self.bn2 = tf.keras.layers.BatchNormalization()
         self.relu_conv = tf.keras.layers.Activation('relu')
         self.UseTimeWrapper = UseTimeWrapper
         if self.UseTimeWrapper:
-            self.conv1 = CustomCnnCharNet(activation="linear")
-            self.conv2 = CustomCnnCharNet(activation="linear")
+            self.conv1 = CustomCnnCharNet(activation="linear", filters=filters)
+            self.conv2 = CustomCnnCharNet(activation="linear", filters=filters)
         else:
-            self.conv1 = CustomCnnPredNet(activation="linear")
-            self.conv2 = CustomCnnPredNet(activation="linear")
+            self.conv1 = CustomCnnPredNet(activation="linear", filters=filters)
+            self.conv2 = CustomCnnPredNet(activation="linear", filters=filters)
 
     def call(self, inputs):
         x = self.conv1(inputs)
@@ -101,11 +101,11 @@ class ResBlock(keras.layers.Layer):
       })
       return config
 
-def ResBlockCharNet():
-    return ResBlock(UseTimeWrapper=True)
+def ResBlockCharNet(filters=32):
+    return ResBlock(UseTimeWrapper=True, filters=filters)
 
-def ResBlockPredNet():
-    return ResBlock(UseTimeWrapper=False)
+def ResBlockPredNet(filters=32):
+    return ResBlock(UseTimeWrapper=False, filters=filters)
 
 class CustomLSTM(keras.layers.Layer):
     def __init__(self, num_hidden = 128,  **kwargs):

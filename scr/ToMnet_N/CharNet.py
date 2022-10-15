@@ -27,17 +27,17 @@ from ToMnet_N.Layers import * # CustomCnnCharNet, ResBlockCharNet, CustomLSTM
 # --------------------------------------------------------------
 class CharNet(keras.layers.Layer):
 
-    def __init__(self, input_tensor, n, N_echar):
+    def __init__(self, input_tensor, n, N_echar, filters=32):
         super(CharNet, self).__init__()
 
         # self.input_tensor = input_tensor
         self.n = n
         self.N_echar = N_echar
 
-        self.conv = CustomCnnCharNet(input_tensor=input_tensor)
+        self.conv = CustomCnnCharNet(input_tensor=input_tensor, filters=filters)
         self.res_blocks = [None] * n
         for i in range(n):
-            self.res_blocks[i] = ResBlockCharNet()
+            self.res_blocks[i] = ResBlockCharNet(filters=filters)
         # Global Pool
         self.lstm = CustomLSTM()
         self.e_char = Dense(N_echar)
