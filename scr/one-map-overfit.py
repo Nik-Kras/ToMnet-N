@@ -37,7 +37,7 @@ DEPTH = 10
 MAX_TRAJ = 15
 EPOCHS = 100 # 150 (no need to have more than 150)
 
-LOAD_PERCENTAGE = 0.001 # 0.1% = 5 games. 0.02% = 1 game
+LOAD_PERCENTAGE = 0.05 # 0.1% = 5 games. 0.02% = 1 game
 
 
 MODEL_PATH = "../save_model/overfitted"
