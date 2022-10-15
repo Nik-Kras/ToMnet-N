@@ -30,12 +30,15 @@ from ToMnet_N import Layers as L
 N_ECHAR = 8
 N_RESBLOCKS = 32
 LEARNING_RATE = 0.0001 / 5
-BATCH_SIZE = 4
+BATCH_SIZE = 32
 ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
-EPOCHS = 150 # 150 (no need to have more than 150)
+EPOCHS = 100 # 150 (no need to have more than 150)
+
+LOAD_PERCENTAGE = 0.05 # 0.1% = 5 games. 0.02% = 1 game
+
 
 
 MODEL_PATH = "../save_model/overfitted"
@@ -185,7 +188,7 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     # --------------------------------------------------------
     print("Train a Model")
     history = t.fit(x=[X_train_traj, X_train_current], y=Y_act_Train,
-                    epochs=EPOCHS, batch_size=1, verbose=2)
+                    epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=2)
     plot_history(history)
     save_history(history)
 
@@ -471,8 +474,7 @@ if __name__ == "__main__":
 
     ### Load data
     X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH,
-                                                                     load_percentage=0.001) # 0.1% = 5 games. 0.02% = 1 game
-
+                                                                     load_percentage=LOAD_PERCENTAGE)
     ### Train the model
     train_model(X_train_traj, X_train_current, Y_act_Train)
 
