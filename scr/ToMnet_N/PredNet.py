@@ -37,7 +37,7 @@ from ToMnet_N.Layers import * # CustomCnnCharNet, ResBlockCharNet, CustomLSTM
 # --------------------------------------------------------------
 class PredNet(keras.layers.Layer):
 
-    def __init__(self, n, filters=32):
+    def __init__(self, n, filters=64):
         super(PredNet, self).__init__()
         self.n = n
 

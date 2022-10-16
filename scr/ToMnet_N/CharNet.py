@@ -27,7 +27,7 @@ from ToMnet_N.Layers import * # CustomCnnCharNet, ResBlockCharNet, CustomLSTM
 # --------------------------------------------------------------
 class CharNet(keras.layers.Layer):
 
-    def __init__(self, input_tensor, n, N_echar, filters=32):
+    def __init__(self, input_tensor, n, N_echar, filters=64):
         super(CharNet, self).__init__()
 
         # self.input_tensor = input_tensor
