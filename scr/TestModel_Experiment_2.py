@@ -411,7 +411,7 @@ def predict_game(model, input_data, predict_steps=5, cnt=1):
         elif predicted_action == 3:  player_position[1] = player_position[1] - 1
 
         # Check for safety (map boundaries)
-        print(player_position[0])
+        print("player_position[0]", player_position[0])
         if player_position[0] > ROW-1: player_position[0] = ROW-1
         if player_position[0] < 0: player_position[0] = 0
         if player_position[1] > COL-1: player_position[1] = COL-1
