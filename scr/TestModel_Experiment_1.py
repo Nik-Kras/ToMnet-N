@@ -35,16 +35,14 @@ ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
-EPOCHS = 50 # 150 (no need to have more than 150)
+EPOCHS = 20 # 150 (no need to have more than 150)
 
 LOAD_PERCENTAGE = 0.15 # 0.1% = 5 games. 0.02% = 1 game
 
-MODEL_PATH = "../save_model/Experiment 2"
-TESTING_GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
-TRAINING_GAMES_PATH = os.path.join('..', 'data', 'Saved Games', 'Experiment 2')
-
-def save_game_to_draw(full_trajectory, predicted_actions):
-    print("Puk-puk")
+checkpoint_filepath = "../save_model/Experiment1_CheckPoints"
+MODEL_PATH = "../save_model/Experiment 1"
+TESTING_GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Test Experiment 1')
+TRAINING_GAMES_PATH = os.path.join('..', 'data', 'Saved Games', 'Experiment 1')
 
 def load_training_games(directory, load_percentage=0.2):
     # --------------------------------------------------------
@@ -105,7 +103,9 @@ def load_one_game(directory):
     #             "actions_history": actions_history
     #         }
     # }
+    print("Prepared to load one game")
     single_game = data_handler.load_one_game(directory=directory)
+    print("One game is loaded")
 
     # --------------------------------------------------------
     # 2. Pre-process data - Zero Padding
@@ -123,7 +123,7 @@ def load_one_game(directory):
                                                       single_game=single_game)
 
     # Make Tensors from List
-    indices = [x - 1 for x in single_game["ToM"]["actions_history"]]  # 1-4 --> 0-3
+    indices = single_game["ToM"]["actions_history"]  # 1-4 --> 0-3
     depth = 4
     X_train_traj = tf.convert_to_tensor(single_game["ToM"]["traj_history_zp"], dtype=tf.float32)
     X_train_current = tf.convert_to_tensor(single_game["ToM"]["current_state_history"], dtype=tf.float32)
@@ -159,7 +159,7 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     # --------------------------------------------------------
     # 4. Train the model
     # --------------------------------------------------------
-    checkpoint_filepath = "../save_model/Experiment2_CheckPoints"
+
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
         # save_weights_only=True,
@@ -215,21 +215,28 @@ def save_history(history, name="TrainHistory.csv"):
         "loss": history.history['loss'],
         "accuracy": history.history['accuracy']
     }))
-    TrainHistory.to_csv(name)
+    TrainHistory.to_csv(name, index=False)
 
-
-def load_model():
+# Use "Checkpoint" to load best performed model or "Overfit" to load model at the end of training
+def load_model(model="Checkpoint"):
     custom_layers = {
         "CustomCnn": L.CustomCnn,
         "ResBlock": L.ResBlock,
         "CustomLSTM": L.CustomLSTM,
     }
-    return tf.keras.models.load_model(MODEL_PATH, custom_objects=custom_layers)
+    path_model = ""
+    if model == "Checkpoint":
+        path_model = checkpoint_filepath
+    elif model == "Overfit":
+        path_model = MODEL_PATH
+    else:
+        raise ValueError("Wrong \"model\" parameter. Try \"Checkpoint\" or \"Overfit\"")
+    return tf.keras.models.load_model(path_model, custom_objects=custom_layers)
 
 # I am only sending a trajectory here
 # This trajectory will be divided to Traj and Current state
 # And therefore coordinates will be calculated
-def predict_game(model, input_data, predict_steps=5):
+def predict_game(model, input_data, predict_steps=1, cnt=1):
 
     # Trajectory Depth saved as - (np_obstacles, np_agent, np_targets, np_actions)
     # Traj shape = BS x TS x W x H x D. 1x5-15x12x12x10
@@ -238,9 +245,13 @@ def predict_game(model, input_data, predict_steps=5):
     if input_data.shape[0] != 1:
         input_data = tf.expand_dims(input_data, axis=0)
 
-    path_to_save = "../Results/Predictions/Prediction 1/"
+    path_to_save = "../Results/Predictions_Experiment_1/"
     width = input_data.shape[2]
     height = input_data.shape[3]
+    N_steps = input_data.shape[1]
+
+    if N_steps < predict_steps:
+        raise ValueError("Ask to predict less steps. The trajectory is too short")
 
     # --------------------------------------------------------
     # 1. Build Initial Map (simple map) for rendering
@@ -275,7 +286,8 @@ def predict_game(model, input_data, predict_steps=5):
             elif goal_layer[row, col, 3] == 1:
                 simple_map[row, col] = 5
     map_df = pd.DataFrame(simple_map)
-    map_df.to_csv(path_to_save + str("simple_map.csv"))
+
+    map_df.to_csv(path_to_save + str("simple_map" + str(cnt) + ".csv"),index=False)
 
     # --------------------------------------------------------
     # 2. Save Full Trajectory
@@ -336,20 +348,15 @@ def predict_game(model, input_data, predict_steps=5):
 
     print("Full trajectory in coordinates: ", full_traj_coordinates)
     full_traj_coordinates_df = pd.DataFrame(full_traj_coordinates)
-    full_traj_coordinates_df.to_csv(path_to_save + str("full_traj.csv"))
+    full_traj_coordinates_df.to_csv(path_to_save + str("full_traj" + str(cnt) + ".csv"),index=False)
 
     # --------------------------------------------------------
     # 3. Save Initial Trajectory
     # --------------------------------------------------------
 
-    Nfull = len(full_traj_coordinates)
-    if Nfull - predict_steps < 5:
-        raise ValueError("The game is too short! It has only " + str(Nfull) + " moves, while you ask to predict"
-                         + str(predict_steps) +
-                         " actions. Give at least a game with trajectory length bigger than predicted actions by 5.")
     initial_traj_coordinates = full_traj_coordinates[0:-predict_steps]
     initial_traj_coordinates_df = pd.DataFrame(initial_traj_coordinates)
-    initial_traj_coordinates_df.to_csv(path_to_save + str("init_traj.csv"))
+    initial_traj_coordinates_df.to_csv(path_to_save + str("init_traj" + str(cnt) + ".csv"),index=False)
 
     # --------------------------------------------------------
     # 4. Save Predicted Trajectory
@@ -405,6 +412,7 @@ def predict_game(model, input_data, predict_steps=5):
         elif predicted_action == 3:  player_position[1] = player_position[1] - 1
 
         # Check for safety (map boundaries)
+        print("player_position[0]", player_position[0])
         if player_position[0] > ROW-1: player_position[0] = ROW-1
         if player_position[0] < 0: player_position[0] = 0
         if player_position[1] > COL-1: player_position[1] = COL-1
@@ -460,12 +468,13 @@ def predict_game(model, input_data, predict_steps=5):
         input_current = new_current_state
 
     coordinates_df = pd.DataFrame(coordinates)
-    coordinates_df.to_csv(path_to_save + str("predicted_traj.csv"))
+    coordinates_df.to_csv(path_to_save + str("predicted_traj" + str(cnt) + ".csv"),index=False)
 
     return predicted_actions
 
 if __name__ == "__main__":
 
+    print("1")
     # To fix ERROR
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
@@ -473,37 +482,97 @@ if __name__ == "__main__":
     # Environment veriable 'TF_GPU_ALLOCATOR=cuda_malloc_async'
 
     ### Load data
-    X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH,
-                                                                     load_percentage=LOAD_PERCENTAGE)
-    ### Train the model
-    train_model(X_train_traj, X_train_current, Y_act_Train)
+    X_train_traj, X_train_current, Y_act_Train = load_one_game(directory=TESTING_GAME_PATH)
+    print("Game Loaded")
 
     ### Use trained model
-    # model =  load_model()
-    #
-    # ### Keep training the model
-    # # history = model.fit(x=X_Train, y=Y_act_Train,
-    # #                 epochs=EPOCHS, batch_size=1, verbose=2)
-    # # plot_history(history)
-    #
-    # ### Test it on one prediction
-    # X_train_traj, X_train_current, Y_act_Train = load_one_game(directory=TESTING_GAME_PATH) # To test I load one single game
-    #
-    # # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
-    # input_data_traj = X_train_traj[-6, ...]
-    # input_data_current = X_train_current[-6, ...]
-    # input_data_traj = tf.expand_dims(input_data_traj, axis=0)  # Add axis for "batch_size"
-    # input_data_current = tf.expand_dims(input_data_current, axis=0)  # Add axis for "batch_size"
-    # actual_action = Y_act_Train[-6]
-    # yhat = model.predict([input_data_traj, input_data_current])
-    #
-    # print("Testing prediction:")
-    # print("Actual action: ", actual_action)
-    # print("Predicted action: ", yhat)
-    #
-    # ### Predict trajectory
-    # print("Predict Trajectory:")
-    # predict_game(model, input_data_traj, predict_steps=5)
+    model =  load_model(model="Checkpoint") # Use "Checkpoint" to load best performed model or "Overfit" to load model at the end of training
+    print("Model Loaded")
+    # Pick the longest trajectory, which has 14 moves and 15tf frame is current state
+    input_data_traj = X_train_traj[-2, ...]
+    input_data_current = X_train_current[-2, ...]
+    input_data_traj = tf.expand_dims(input_data_traj, axis=0)  # Add axis for "batch_size"
+    input_data_current = tf.expand_dims(input_data_current, axis=0)  # Add axis for "batch_size"
+    actual_action = Y_act_Train[-2]
+    yhat = model.predict([input_data_traj, input_data_current])
+
+    print("Testing prediction:")
+    print("Actual action: ", actual_action)
+    print("Predicted action: ", yhat)
+
+    print("Predicted full trajectory: ", Y_act_Train)
+
+    ### Predict trajectory
+    print("Predict Trajectory:")
+
+    cnt = 1
+    predict_game(model, input_data_traj, predict_steps=1, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=2, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=3, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=4, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=5, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=6, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=8, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=10, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=12, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=14, cnt=cnt)
+    cnt = cnt + 1
+
+    # ### Use trained model
+    print("Loading new model")
+
+
+
+    model = load_model(model="Overfit")
+    cnt = cnt + 10
+
+    predict_game(model, input_data_traj, predict_steps=1, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=2, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=3, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=4, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=5, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=6, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=8, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=10, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=12, cnt=cnt)
+    cnt = cnt + 1
+
+    predict_game(model, input_data_traj, predict_steps=14, cnt=cnt)
+    cnt = cnt + 1
 
     print("------------------------------------")
     print("Congratultions! You have reached the end of the script.")
