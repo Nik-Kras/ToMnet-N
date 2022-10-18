@@ -35,14 +35,14 @@ ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
-EPOCHS = 15 # 150 (no need to have more than 150)
+EPOCHS = 50 # 150 (no need to have more than 150)
 
-LOAD_PERCENTAGE = 0.01 # 0.1% = 5 games. 0.02% = 1 game
+LOAD_PERCENTAGE = 0.25 # 0.1% = 5 games. 0.02% = 1 game
 
-
-MODEL_PATH = "../save_model/Experiment 2"
+checkpoint_filepath = "../save_model/Experiment1_CheckPoints"
+MODEL_PATH = "../save_model/Experiment 1"
 TESTING_GAME_PATH = os.path.join('..', 'data', 'Saved Games', 'Overfit')
-TRAINING_GAMES_PATH = os.path.join('..', 'data', 'Saved Games', 'Experiment 2')
+TRAINING_GAMES_PATH = os.path.join('..', 'data', 'Saved Games', 'Experiment 1')
 
 def save_game_to_draw(full_trajectory, predicted_actions):
     print("Puk-puk")
@@ -160,7 +160,6 @@ def train_model(X_train_traj, X_train_current, Y_act_Train):
     # --------------------------------------------------------
     # 4. Train the model
     # --------------------------------------------------------
-    checkpoint_filepath = "../save_model/Experiment2_CheckPoints"
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
         # save_weights_only=True,
@@ -469,6 +468,9 @@ if __name__ == "__main__":
 
     # To fix ERROR
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+
+    # To fix memory ERROR
+    # Environment veriable 'TF_GPU_ALLOCATOR=cuda_malloc_async'
 
     ### Load data
     X_train_traj, X_train_current, Y_act_Train = load_training_games(directory=TRAINING_GAMES_PATH,

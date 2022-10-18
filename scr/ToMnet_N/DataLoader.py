@@ -237,11 +237,13 @@ class DataHandler:
         act = []
         goal = []
         game_length = 0
-        while game_length < 10:
+        while game_length < 5:
             one_game = random.choice(files)
             filename = os.path.join(directory, one_game)
             traj, act, goal = self.read_one_game(filename)
             game_length = traj.shape[0]
+            if game_length < 5:
+                print("Check while loop. Tha game is too short")
 
         traj_history, current_state_history, actions_history, _ = self.generate_data_from_game(traj, act, goal)
 

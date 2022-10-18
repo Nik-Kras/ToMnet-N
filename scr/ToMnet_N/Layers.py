@@ -19,7 +19,7 @@ from keras.layers import LSTM
 from keras import activations
 
 class CustomCnn(keras.layers.Layer):
-    def __init__(self, input_tensor=None, activation="linear", filters=32,
+    def __init__(self, input_tensor=None, activation="linear", filters=64,
                  UseTimeWrapper=False, regularisation_value = 0.001, **kwargs):
         super(CustomCnn, self).__init__(**kwargs)
         self.UseTimeWrapper = UseTimeWrapper
@@ -65,14 +65,14 @@ class CustomCnn(keras.layers.Layer):
         })
         return config
 
-def CustomCnnCharNet(input_tensor=None, activation="linear", filters=32, **kwargs):
+def CustomCnnCharNet(input_tensor=None, activation="linear", filters=64, **kwargs):
     return CustomCnn(input_tensor=input_tensor, activation=activation, filters=filters, UseTimeWrapper=True, **kwargs)
 
-def CustomCnnPredNet(input_tensor=None, activation="linear", filters=32, **kwargs):
+def CustomCnnPredNet(input_tensor=None, activation="linear", filters=64, **kwargs):
     return CustomCnn(input_tensor=input_tensor, activation=activation, filters=filters, UseTimeWrapper=False, **kwargs)
 
 class ResBlock(keras.layers.Layer):
-    def __init__(self, UseTimeWrapper=False, filters=32, **kwargs):
+    def __init__(self, UseTimeWrapper=False, filters=64, **kwargs):
         super(ResBlock, self).__init__(**kwargs)
         self.bn1 = tf.keras.layers.BatchNormalization()
         self.bn2 = tf.keras.layers.BatchNormalization()
@@ -101,10 +101,10 @@ class ResBlock(keras.layers.Layer):
       })
       return config
 
-def ResBlockCharNet(filters=32):
+def ResBlockCharNet(filters=64):
     return ResBlock(UseTimeWrapper=True, filters=filters)
 
-def ResBlockPredNet(filters=32):
+def ResBlockPredNet(filters=64):
     return ResBlock(UseTimeWrapper=False, filters=filters)
 
 class CustomLSTM(keras.layers.Layer):
