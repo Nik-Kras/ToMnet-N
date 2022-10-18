@@ -35,7 +35,11 @@ ROW = 12
 COL = 12
 DEPTH = 10
 MAX_TRAJ = 15
+<<<<<<< HEAD
 EPOCHS = 50 # 150 (no need to have more than 150)
+=======
+EPOCHS = 20 # 150 (no need to have more than 150)
+>>>>>>> c1f1f3517f932c11ba35b5b86672a1ca8278a919
 
 LOAD_PERCENTAGE = 0.15 # 0.1% = 5 games. 0.02% = 1 game
 
