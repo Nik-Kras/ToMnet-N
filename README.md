@@ -63,4 +63,6 @@ Please read here for description and specification on each folder: http://driven
 └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 ```
 
-Documentation is hosted on Read The Docs - *URL*
+Documentation is generated with Sphinx and hosted on Read The Docs - *URL*
+
+> `sphinx-build -b html docs/source/ docs/build/html` to generate web page
