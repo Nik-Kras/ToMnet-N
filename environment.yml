@@ -1,4 +1,4 @@
-name: ToMnet-Conda
+name: ToMnet
 channels:
     - conda-forge
 dependencies:

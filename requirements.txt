@@ -1,5 +1,6 @@
+tensorflow
 matplotlib
-tensorflow==2.5.0
 pandas
-sklearn
-numpy==1.19.5
+
+sphinx 
+sphinx-rtd-theme
