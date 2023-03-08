@@ -1,0 +1,20 @@
+{
+    "agent_1": {
+        "goal_2": 10,
+        "goal_3": 9,
+        "goal_4": 8,
+        "goal_5": 7,
+        "goal_6": 6,
+        "goal_7": 5,
+        "goal_8": 4
+    },
+    "agent_2": {
+        "goal_2": 10,
+        "goal_3": 5,
+        "goal_4": 4,
+        "goal_5": 3,
+        "goal_6": 2,
+        "goal_7": 1,
+        "goal_8": 0
+    }
+}
