@@ -33,7 +33,11 @@ class Cell:
 
     def decrease_entropy(self, neighbour: Cell, direction: Literal["left", "right", "up", "down"]):
         """ Updates list of possible patters due to collapse of neighbour cell """
+        print("Direction Propagated->Collapsed: ", direction)
+        print("Neighbour: \n", str(neighbour.get_pattern())) 
+        print("Patterns #1: \n", str(self._options))
         self._options.patterns = [pattern for pattern in self._options.patterns if self.pattern_valid(pattern, neighbour, direction)]
+        print("Patterns #2: \n", str(self._options))
 
     def pattern_valid(self, pattern: Pattern, neighbour: Cell, direction: Literal["left", "right", "up", "down"]) -> bool:
         """ Checks if the patter can be applied to the cell if there is a specific neighbour on certain direction """

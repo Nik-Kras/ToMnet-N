@@ -38,8 +38,10 @@ class Grid:
                 """
                 x = neighbour_coordinates.x
                 y = neighbour_coordinates.y
+                print("\n---\n\nCollapsed Coordinates: ", str(coordinates))
+                print("Propagated Coordinates: ", str(neighbour_coordinates))
                 self.Cells[x][y].decrease_entropy(neighbour=collapsed_cell, 
-                                                  direction=dir.inverse())
+                                                  direction=str(dir.inverse()))
 
     def cell_is_inside_grid(self, coordinates: Pos) -> bool:
         """ Checks if coordinates refer to valid cell """
@@ -66,12 +68,12 @@ class Grid:
                 # Each Cell
                 for xx in range(3):
                     for yy in range(3):
-                        map.loc[3*x + xx][3*y + yy] = self.Cells[x][y].get_pattern()[xx][yy]
+                        map.loc[3*y + yy][3*x + xx] = self.Cells[x][y].get_pattern()[yy][xx]
         
         return map
 
 if __name__ == "__main__":
-    grid = Grid(shape = 3)
+    grid = Grid(shape = 9)
     grid.export_to_dataframe()      # Print empty DataFrame
 
     while not grid.finished_generation():
@@ -80,7 +82,6 @@ if __name__ == "__main__":
         grid.propagate_entropy(coor)
 
     map = grid.export_to_dataframe()
-    # print(map.to_numpy())
     plt.axis('off')
     plt.imshow(map.to_numpy(dtype=float))
     plt.show()
