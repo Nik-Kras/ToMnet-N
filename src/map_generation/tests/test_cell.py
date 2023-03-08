@@ -1,4 +1,4 @@
-from src.game_generation.utils.Cell import Cell
+from src.map_generation.utils.Cell import Cell
 
 def test_collapse():
     cell = Cell()

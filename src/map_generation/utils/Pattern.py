@@ -32,18 +32,18 @@ class Patterns:
     
     def initialize_patterns(self):
         """ Init possible patterns with given pre-set patterns """
-        self.patterns.append(Pattern([[0, 1, 0], [0, 1, 1], [0, 1, 0]], 2, "Pattern_1"))
-        self.patterns.append(Pattern([[0, 0, 0], [1, 1, 1], [0, 1, 0]], 2, "Pattern_2"))
-        self.patterns.append(Pattern([[0, 1, 0], [1, 1, 0], [0, 1, 0]], 2, "Pattern_3"))
-        self.patterns.append(Pattern([[0, 1, 0], [1, 1, 1], [0, 0, 0]], 2, "Pattern_4"))
-        self.patterns.append(Pattern([[0, 0, 0], [1, 1, 1], [0, 0, 0]], 1, "Pattern_5"))
-        self.patterns.append(Pattern([[0, 1, 0], [0, 1, 0], [0, 1, 0]], 1, "Pattern_6"))
-        self.patterns.append(Pattern([[0, 0, 0], [0, 0, 0], [0, 0, 0]], 0, "Pattern_Default"))
+        self.patterns.append(Pattern([[0, 1, 0], [0, 1, 1], [0, 1, 0]], 4, "Pattern_1"))
+        self.patterns.append(Pattern([[0, 0, 0], [1, 1, 1], [0, 1, 0]], 4, "Pattern_2"))
+        self.patterns.append(Pattern([[0, 1, 0], [1, 1, 0], [0, 1, 0]], 4, "Pattern_3"))
+        self.patterns.append(Pattern([[0, 1, 0], [1, 1, 1], [0, 0, 0]], 4, "Pattern_4"))
+        self.patterns.append(Pattern([[0, 0, 0], [1, 1, 1], [0, 0, 0]], 3, "Pattern_5"))
+        self.patterns.append(Pattern([[0, 1, 0], [0, 1, 0], [0, 1, 0]], 3, "Pattern_6"))
+        self.patterns.append(Pattern([[0, 0, 0], [0, 0, 0], [0, 0, 0]], 1, "Pattern_Default"))
 
     def get_random_pattern(self):
         """ Returns a random pattern based on probability weights """
         return random.choices(population=[x.state for x in self.patterns], 
-                              weights=(x.weight for x in self.patterns), 
+                              weights=[x.weight for x in self.patterns], # Apply probabilities
                               cum_weights=None, 
                               k=1)[0]
     

@@ -5,32 +5,34 @@ Creates a random map of given shape
 Uses Wave Function Collapse to generate walls
 """
 import pandas as pd
+import numpy as np
+import random
+from src.map_generation.utils.Grid import Grid
+from src.map_generation.utils.data_structures import MapElements, Pos
+from src.map_generation.utils.drawer import draw_map
 
-def generate_wfc_walls(shape: tuple) -> pd.DataFrame:
+def generate_wfc_walls(shape: int = 9) -> pd.DataFrame:
     """
     This function applies Wafe Function Collapse
     To generate random walls in the map shaped as `shape`
-    Give it desired coordinates and receive a binary map where
-    1 is wall and 0 is path
+    Give it desired coordinates and receive a binary map 
+    Map value description shown in `MapElements`
 
     :param shape: Two-positional tuple describing width and height of the map
     :type shape: typle
     :return: Binary map where 1 is wall and 0 is path
     :rtype: pd.DataFrame
     """
-    """
-    grid = Grid()
+    grid = Grid(shape)
+    grid.export_to_dataframe()      # Print empty DataFrame
 
     while not grid.finished_generation():
-        cell_coordinates = grid.lowest_entropy_cell()
-        grid.collapse_cell(cell_coordinates)
-        grid.propagate_entropy(cell_coordinates)
+        coor = grid.lowest_entropy_cell()
+        grid.collapse_cell(coor)
+        grid.propagate_entropy(coor)
 
-    binary map = grid.export_to_dataframe()  # [[]] or pd.DataFrame
-    return binary_map
-    """
-    ### Check that shape is dividable by 3 for both height and width
-    pass
+    map = grid.export_to_dataframe()
+    return map
 
 def put_goals_and_player(map: pd.DataFrame, num_goals: int) -> pd.DataFrame:
     """
@@ -48,11 +50,27 @@ def put_goals_and_player(map: pd.DataFrame, num_goals: int) -> pd.DataFrame:
     :return: Map with walls, goals and player 
     :rtype: pd.DataFrame
     """
+    if num_goals < 0 or num_goals > 7:
+        raise ValueError("Select number of goals in the range from 1 to 7")
+    
+    empty_cells = np.where(map == MapElements.Empty.value)
+    x, y = empty_cells
+    random_empty_cells = random.sample(range(1, x.shape[0]), num_goals+1)
 
-    ### Check that `num_goals` is in the range (1,8)
-    pass
+    # Put Goals 
+    for count, random_ind in enumerate(random_empty_cells[:-1]):
+        empty_x = x[random_ind]
+        empty_y = y[random_ind]
+        map.loc[empty_x][empty_y] = MapElements(count+2).value
 
-def generate_map(filename: str, shape: tuple, num_goals: int = 4) -> pd.DataFrame:
+    # Put Players
+    empty_x = x[random_empty_cells[-1]]
+    empty_y = y[random_empty_cells[-1]]
+    map.loc[empty_x][empty_y] = MapElements.Player.value
+
+    return map
+
+def generate_map(filename: str, shape: int = 12,  num_goals: int = 4) -> pd.DataFrame:
     """
     This function generates complete map with walls, goals and player
     It returns the map as pd.DataFrame and saves it by given path
@@ -66,20 +84,18 @@ def generate_map(filename: str, shape: tuple, num_goals: int = 4) -> pd.DataFram
     :return: Map with walls, goals and player 
     :rtype: pd.DataFrame
     """
+    wall_map = generate_wfc_walls(shape)
+    complete_map = put_goals_and_player(wall_map, num_goals)
+    # draw_map(wall_map)
+    # draw_map(complete_map)
+    complete_map.to_csv("data/maps/{}.csv".format(filename), header=False, index=False)
 
-    ## call generate_wfc_walls
-    ## call put_goals_and_player
-    ## save the map
-    pass
-
-def create_maps_dataset(directory: str, num_maps: int, shape: tuple, num_goals: int = 4):
+def create_maps_dataset(num_maps: int, shape: int = 12, num_goals: int = 4):
     """
     This function generates `num_maps` complete maps with walls, goals and player
     It saves all of them in the given `directory` path with unique names for all of them.
     Use it to create a dataset of maps. Apply it to agents to generate game dataset for ToMnet-N
 
-    :param directory: Path to a folder to store generated dataset 
-    :type directory: str
     :param num_maps: Number of maps to be generated
     :type num_maps: int
     :param shape: Two-positional tuple describing width and height of the map
@@ -87,6 +103,16 @@ def create_maps_dataset(directory: str, num_maps: int, shape: tuple, num_goals: 
     :param num_goals: Number of goals to be placed in the map. Allowed range: from 1 to 8.
     :type num_goals: int
     """
+    for i in range(num_maps):
+        generate_map(filename="map_{:04d}".format(i),
+                     shape=shape,
+                     num_goals=num_goals)
+        if i % (num_maps/10) == 0:
+            print("Progress {}%".format(int(100*i/num_maps)))
 
-    ## Iteratively call `generate_map` `num_maps` number of times
-    pass
+if __name__ == "__main__":
+    map = generate_wfc_walls()
+    draw_map(map)
+    
+    create_maps_dataset(50)
+    

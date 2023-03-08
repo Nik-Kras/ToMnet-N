@@ -32,8 +32,8 @@ class Pos():
 
 class MapElements(Enum):
     
-    Empty  = 0
-    Wall   = 1
+    Wall   = 0
+    Empty  = 1
     Goal_A = 2
     Goal_B = 3
     Goal_C = 4

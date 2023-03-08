@@ -1,5 +1,5 @@
-from Cell import Cell
-from src.game_generation.utils.data_structures import Pos, MapElements
+from src.map_generation.utils.Cell import Cell
+from src.map_generation.utils.data_structures import Pos, MapElements
 import pandas as pd
 import matplotlib.pyplot as plt
         
@@ -38,8 +38,8 @@ class Grid:
                 """
                 x = neighbour_coordinates.x
                 y = neighbour_coordinates.y
-                print("\n---\n\nCollapsed Coordinates: ", str(coordinates))
-                print("Propagated Coordinates: ", str(neighbour_coordinates))
+                # print("\n---\n\nCollapsed Coordinates: ", str(coordinates))
+                # print("Propagated Coordinates: ", str(neighbour_coordinates))
                 self.Cells[x][y].decrease_entropy(neighbour=collapsed_cell, 
                                                   direction=str(dir.inverse()))
 

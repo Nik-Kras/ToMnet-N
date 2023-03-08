@@ -1,4 +1,4 @@
-from src.game_generation.utils.Pattern import Patterns
+from src.map_generation.utils.Pattern import Patterns
 
 def test_init():
     pattern = Patterns()
@@ -24,4 +24,3 @@ def test_clear():
     pattern.initialize_patterns()
     pattern.clear()
     assert len(pattern.patterns) == 0
-
