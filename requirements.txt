@@ -2,6 +2,8 @@ tensorflow
 matplotlib
 pandas
 pytest
+pathfinding
+ipykernel
 
 sphinx 
 sphinx-rtd-theme

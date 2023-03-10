@@ -111,8 +111,6 @@ def create_maps_dataset(num_maps: int, shape: int = 12, num_goals: int = 4):
             print("Progress {}%".format(int(100*i/num_maps)))
 
 if __name__ == "__main__":
-    map = generate_wfc_walls()
-    draw_map(map)
-    
-    create_maps_dataset(50)
+
+    create_maps_dataset(10)
     
