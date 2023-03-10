@@ -17,48 +17,52 @@ Please read here for description and specification on each folder: http://driven
 
 ```bash
 ├── LICENSE
-├── Makefile           <- Makefile with commands like `make data` or `make train`
-├── README.md          <- The top-level README for developers using this project.
-├── data               <- Generated datasets
+├── Makefile            <- Makefile with commands like `make data` or `make train`
+├── README.md           <- The top-level README for developers using this project.
+├── data                <- Generated datasets
 │
-├── docs               <- A default Sphinx project; see sphinx-doc.org for details
+├── docs                <- A default Sphinx project; see sphinx-doc.org for details
 │
-├── models             <- Trained and serialized models, model predictions, or model summaries
+├── models              <- Trained and serialized models, model predictions, or model summaries
 │
-├── notebooks          <- Jupyter notebooks for model / data exploration. Naming convention is a number (for ordering),
-│                         the creator's initials, and a short `-` delimited description, e.g.
-│                         `1.0-jqp-initial-data-exploration`.
+├── notebooks           <- Jupyter notebooks for model / data exploration. Naming convention is a number (for ordering),
+│                          the creator\'s initials, and a short `-` delimited description, e.g.
+│                          `1.0-jqp-initial-data-exploration`.
 │
-├── references         <- Data dictionaries, manuals, and all other explanatory materials.
+├── references          <- Data dictionaries, manuals, and all other explanatory materials.
 │
-├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── figures        <- Generated graphics and figures to be used in reporting
+├── reports             <- Generated analysis as HTML, PDF, LaTeX, etc.
+│   └── figures         <- Generated graphics and figures to be used in reporting
 │
-├── requirements.txt   <- The requirements file for reproducing the analysis environment
+├── requirements.txt    <- The requirements file for reproducing the analysis environment
 │
-├── environment.yml    <- Environmental dependencies for reproducing the analysis environment
+├── environment.yml     <- Environmental dependencies for reproducing the analysis environment
 │
-├── src                <- Source code for use in this project.
-│   ├── __init__.py    <- Makes src a Python module
+├── src                 <- Source code for use in this project.
+│   ├── __init__.py     <- Makes src a Python module
 │   │
-│   ├── data           <- Scripts to download or generate data
-│   │   └── make_dataset.py
+│   ├── map_generation  <- Module to Cretae Maps with Wafe Function Collapse
+│   │   ├── tests       <- Unit tests for functionality inside `utils`
+│   │   ├── utils       <- Helper functions and classes that implements Wave Function Collapse generation
+│   │   └── map.py      <- Highly abstract API for map generation
 │   │
-│   ├── features       <- Scripts to turn raw data into features for modeling
-│   │   └── build_features.py
+│   ├── game_generation <- Module to Cretae Maps with Wafe Function Collapse
+│   │   ├── tests       <- Unit tests for functionality inside `utils`
+│   │   ├── utils       <- Helper functions and classes that implements Path Finding and Map manipulation
+│   │   └── game.py     <- Highly abstract API for game generation out of maps
 │   │
-│   ├── model         <- Scripts to train models and then use trained models to make
-│   │   │                 predictions
-│   │   ├── predict_model.py
-│   │   └── train_model.py
+│   ├── model_tomnet    <- Scripts to work with ToMnet-N model
+│   │   ├── layers      <- Custom layers for ToMnet-N construction
+│   │   ├── tomnet.py   <- Create a ToMnet-N model
+│   │   ├── train.py    <- Training algorithm for ToMnet-N
+│   │   └── predict.py  <- API to utilise ToMnet-N
 │   │
-│   └── visualization  <- Scripts to create exploratory and results oriented visualizations
+│   ├── model_llm       <- Module to interact with LLM model
+│   │   ├── finetune.py <- Script to finetune the LLM to perform Theory of Mind tasks
+│   │   └── predict.py  <- API to utilise LLM
+│   │
+│   └── comparison      <- Scripts that visualise and compare ToMnet-N and LLM
 │       └── visualize.py
-│
-├── tests                <- Unit tests for each module
-│   ├── test_bot_ai.py   <- Set of tests for player in the Grid World
-│   ├── test_map_gen.py  <- Set of tests for generating Grid World games or maps
-│   └── tets_tomnet_n.py <- Set of tests for verifying ToMnet-N model
 │
 └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 ```

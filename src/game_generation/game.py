@@ -8,6 +8,7 @@ import pandas as pd
 import os
 
 def create_games_dataset(path_maps: str):
+    """ Generates a dataset of games out of Maps """
     map_filenames = [f for f in os.listdir(path_maps) if os.path.isfile(os.path.join(path_maps, f))]
     print(map_filenames)
     

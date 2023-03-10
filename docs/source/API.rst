@@ -1,29 +1,26 @@
 API
 ===
 
-Data Generation
-==================
-
 *Map Generation*
 -----------------
 
-.. autofunction:: src.data.make_map.generate_wfc_walls
-.. autofunction:: src.data.make_map.put_goals_and_player
-.. autofunction:: src.data.make_map.generate_map
-.. autofunction:: src.data.make_map.create_maps_dataset
-
-*Bot AI*
------------------
-
-.. autofunction:: src.data.bot_ai.play_map
+.. automodule:: src.map_generation.map
     
 *Game Generation*
 -----------------
 
-You can generate games using `src.data.make_dataset.py`
-Call it from console and generate N games played by M agents
+.. automodule:: src.game_generation.game
 
-.. code-block:: console
+*ToMnet-N API*
+-----------------
 
-   (.venv) $ python src.data.make_dataset.py
+.. automodule:: src.model_tomnet.tomnet
+.. automodule:: src.model_tomnet.train
+.. automodule:: src.model_tomnet.predict
+
+*LLM API*
+-----------------
+
+.. automodule:: src.model_llm.finetune
+.. automodule:: src.model_llm.predict
 
