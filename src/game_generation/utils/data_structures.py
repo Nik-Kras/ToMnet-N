@@ -1,6 +1,24 @@
 from __future__ import annotations
+from src.map_generation.utils.data_structures import Pos
 from dataclasses import dataclass
 from enum import Enum
+from typing import List
+import pandas as pd
+
+
+@dataclass
+class GameData():
+    """ Use it to receive output from an agent
+        That played a map to save a game
+    """
+    agent_type: str
+    goal_consumed: str
+    trajectory: List[Pos]
+    map: pd.DataFrame = pd.DataFrame([None])
+
+    def save_game():
+        """ Saves full game in CSV """
+        pass
 
 @dataclass
 class Pos():
@@ -29,13 +47,8 @@ class Pos():
     def inverse(self) -> Pos:
         """ Returns inverse vector """
         return Pos(-self.x, -self.y)
-    
-    def distance_manhattan(self, other: Pos):
-        """ Returns Manhattan distance from one position to another """
-        return abs(other.inverse().x + self.x) + abs(other.inverse().y + self.y)
 
 class MapElements(Enum):
-    
     Wall   = 0
     Empty  = 1
     Goal_A = 2
@@ -46,3 +59,12 @@ class MapElements(Enum):
     Goal_F = 7
     Goal_G = 8
     Player = 9
+
+class Goals(Enum):
+    Goal_A = 2
+    Goal_B = 3
+    Goal_C = 4
+    Goal_D = 5
+    Goal_E = 6
+    Goal_F = 7
+    Goal_G = 8

@@ -112,5 +112,5 @@ def create_maps_dataset(num_maps: int, shape: int = 12, num_goals: int = 4):
 
 if __name__ == "__main__":
 
-    create_maps_dataset(10)
+    create_maps_dataset(5, shape=3)
     

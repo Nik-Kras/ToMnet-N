@@ -1,56 +1,37 @@
 """
 This module creates N games played by M agents
 """
-import src.data.bot_ai as bot_ai
-import src.data.read_map as read_map
-import src.data.make_map as make_map
+from src.game_generation.utils.map_processing import load_map
+from src.game_generation.utils.agent_player import get_trajectories, get_agent_types, select_trajectory
+from src.game_generation.utils.data_structures import GameData
+import pandas as pd
+import os
 
+def create_games_dataset(path_maps: str):
+    map_filenames = [f for f in os.listdir(path_maps) if os.path.isfile(os.path.join(path_maps, f))]
+    print(map_filenames)
+    
+    for map_name in map_filenames:
 
-def play_map(map: pd.DataFrame, agent_id: int, filename: str):
-    """
-    This function gets a map to play and type of agent to apply.
-    It saves the game by given `filename` and also
-    It returns a game with player's trajectory and consumed goal
+        ### Generate one game per Agent?
+        ### Or generate all maps for all Agents?
+        ### As for now, I will use each map for all agents, but it could be changed in time
+        map = load_map(os.path.join(path_maps, map_name))
+        trajectories = get_trajectories(map)
 
-    :param map: Map with walls, goals and player 
-    :type map: pd.DataFrame
-    :param agent_id: ID of specific agent to apply. Agents are specified in `agent_types.json`
-    :type agent_id: int
-    :param filename: Path including desired filename for the game to be stored
-    :type filename: str
-    """
-
-    """
-    graph = Graph()
-    map = load_map(...)
-    graph.init_nodes(map)
-
-    open_set = 
-    """
-
-    pass
-
-def read_game(filename: str):
-    """ loads 
-    """
-    pass
-
-
-def create_games_dataset(path: str):
-    """
-    This function generates dataset of played games by agents
-
-    :param path: Path to folder with maps to play
-    :type path: int
-    """
-    for i in range(num_maps):
-        generate_map(filename="map_{:04d}".format(i),
-                     shape=shape,
-                     num_goals=num_goals)
-        if i % (num_maps/10) == 0:
-            print("Progress {}%".format(int(100*i/num_maps)))
+        ### Change this to random.choice() to have one map per agent
+        agent_types = get_agent_types()
+        for agent in agent_types:
+            selected_trajectory = select_trajectory(trajectories, agent)
+            game = GameData(agent_type=agent, 
+                            goal_consumed=list(selected_trajectory.keys())[0],
+                            trajectory=list(selected_trajectory.values())[0],
+                            map=map)
+            game.save_game()
 
 if __name__ == "__main__":
 
-    create_maps_dataset(10)
+    # create_games_dataset("data/maps")
+
+    x = pd.DataFrame()
     
