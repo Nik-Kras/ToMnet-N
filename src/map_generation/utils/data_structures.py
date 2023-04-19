@@ -1,6 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
+import json
 
 @dataclass
 class Pos():
@@ -29,6 +31,13 @@ class Pos():
     def inverse(self) -> Pos:
         """ Returns inverse vector """
         return Pos(-self.x, -self.y)
+    
+class PosEncoder(json.JSONEncoder):
+    """ Serializes Pos to print trajectories with json.dumps() """
+    def default(self, o: Any) -> Any:
+        if isinstance(o, Pos):
+            return {'x': o.x, 'y': o.y}
+        return super().default(o)
 
 class MapElements(Enum):
     

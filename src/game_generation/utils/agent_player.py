@@ -2,19 +2,24 @@ from src.game_generation.utils.path_finder import get_trajectory
 from src.game_generation.utils.map_processing import get_player_position, get_goals_coordinates, load_map, replace_element_on_map
 from src.game_generation.utils.data_structures import GameData, Goals, Pos, MapElements
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
 from typing import Dict, List
 import json
 
 def load_agent_preferences(agent_type: str):
     """ Returns a dictionary with agent's goal values """
-    with open("src/game_generation/utils/agent_types.json") as json_file:
+    output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'game_generation', 'utils'))
+    with open(f"{output_dir}/agent_types.json") as json_file:
         agent_pref = json.load(json_file)
     return agent_pref[agent_type]
 
 def get_agent_types():
     """ Returns a list of all agent's names / types """
-    with open("src/game_generation/utils/agent_types.json") as json_file:
+    output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'game_generation', 'utils'))
+    print(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+    with open(f"{output_dir}/agent_types.json") as json_file:
         agent_pref = json.load(json_file)
     return list(agent_pref.keys())
 
@@ -60,15 +65,22 @@ def select_trajectory(trajectories: dict, agent_type: str) -> Dict[str, int]:
         if list(cost_ef.values())[0] < efficience:
             cost_ef = {goal: efficience}
 
+    output = {
+        "goal": list(cost_ef.keys())[0],
+        "score": list(cost_ef.values())[0],
+        "trajectory": trajectories[goal]
+    }
+
     # DEBUG
     # print("Values: {}".format(goal_values))
     # print("Costs: {}".format(goal_costs))
     # print("Best Goal: {}".format(cost_ef))
 
-    return cost_ef
+    return output
 
 if __name__ == "__main__":
-    map = load_map("data/maps/map_0007.csv")
+    output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'maps'))
+    map = load_map(f"{output_dir}/map_0007.csv")
     trajectories = get_trajectories(map)
     select_trajectory(trajectories, "agent_1")
     select_trajectory(trajectories, "agent_2")

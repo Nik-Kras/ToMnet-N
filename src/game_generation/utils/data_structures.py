@@ -2,8 +2,9 @@ from __future__ import annotations
 from src.map_generation.utils.data_structures import Pos
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, Any
 import pandas as pd
+import json
 
 
 @dataclass
@@ -19,6 +20,18 @@ class GameData():
     def save_game():
         """ Saves full game in CSV """
         pass
+    
+class GameDataEncoder(json.JSONEncoder):
+    """ Serializes GameData to print trajectories with json.dumps() """
+    def default(self, o: Any) -> Any:
+        if isinstance(o, Pos):
+            return {'x': o.x, 'y': o.y}
+        elif isinstance(o, GameData):
+            return {'agent_type': o.agent_type, 
+                    'goal_consumed': o.goal_consumed,
+                    'trajectory': [pos.__dict__ for pos in o.trajectory], # json.dumps(o.trajectory, cls=PosEncoder), 
+                    'map': o.map.to_dict()}
+        return super().default(o)
 
 @dataclass
 class Pos():
@@ -47,6 +60,13 @@ class Pos():
     def inverse(self) -> Pos:
         """ Returns inverse vector """
         return Pos(-self.x, -self.y)
+    
+class PosEncoder(json.JSONEncoder):
+    """ Serializes Pos to print trajectories with json.dumps() """
+    def default(self, o: Any) -> Any:
+        if isinstance(o, Pos):
+            return {'x': o.x, 'y': o.y}
+        return super().default(o)
 
 class MapElements(Enum):
     Wall   = 0

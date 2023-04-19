@@ -41,28 +41,21 @@ Please read here for description and specification on each folder: http://driven
 ├── src                 <- Source code for use in this project.
 │   ├── __init__.py     <- Makes src a Python module
 │   │
-│   ├── map_generation  <- Module to Cretae Maps with Wafe Function Collapse
+│   ├── map_generation  <- Module to Cretae Maps with Wafe Function Collapse [Create Environment]
 │   │   ├── tests       <- Unit tests for functionality inside `utils`
 │   │   ├── utils       <- Helper functions and classes that implements Wave Function Collapse generation
 │   │   └── map.py      <- Highly abstract API for map generation
 │   │
-│   ├── game_generation <- Module to Cretae Maps with Wafe Function Collapse
+│   ├── game_generation <- Module to Cretae Maps with Wafe Function Collapse [Record how player plays inside of Environment]
 │   │   ├── tests       <- Unit tests for functionality inside `utils`
 │   │   ├── utils       <- Helper functions and classes that implements Path Finding and Map manipulation
 │   │   └── game.py     <- Highly abstract API for game generation out of maps
 │   │
-│   ├── model_tomnet    <- Scripts to work with ToMnet-N model
-│   │   ├── layers      <- Custom layers for ToMnet-N construction
-│   │   ├── tomnet.py   <- Create a ToMnet-N model
-│   │   ├── train.py    <- Training algorithm for ToMnet-N
-│   │   └── predict.py  <- API to utilise ToMnet-N
-│   │
-│   ├── model_llm       <- Module to interact with LLM model
-│   │   ├── finetune.py <- Script to finetune the LLM to perform Theory of Mind tasks
-│   │   └── predict.py  <- API to utilise LLM
-│   │
-│   └── comparison      <- Scripts that visualise and compare ToMnet-N and LLM
-│       └── visualize.py
+│   └── model_tomnet    <- Scripts to work with ToMnet-N model  [Train & Test how model predicts player in the game]
+│       ├── layers      <- Custom layers for ToMnet-N construction
+│       ├── tomnet.py   <- Create a ToMnet-N model
+│       ├── train.py    <- Training algorithm for ToMnet-N
+│       └── predict.py  <- API to utilise ToMnet-N
 │
 └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 ```
