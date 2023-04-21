@@ -16,5 +16,14 @@
         "Goal_E": 2,
         "Goal_F": 1,
         "Goal_G": 0
+    },
+    "agent_3": {
+        "Goal_A": 0,
+        "Goal_B": 2,
+        "Goal_C": 4,
+        "Goal_D": 4,
+        "Goal_E": 6,
+        "Goal_F": 9,
+        "Goal_G": 10
     }
 }
