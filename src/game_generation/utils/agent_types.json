@@ -1,29 +1,29 @@
 {
     "agent_1": {
-        "Goal_A": 10,
-        "Goal_B": 9,
-        "Goal_C": 8,
-        "Goal_D": 7,
-        "Goal_E": 6,
-        "Goal_F": 5,
+        "Goal_A": 30,
+        "Goal_B": 25,
+        "Goal_C": 20,
+        "Goal_D": 15,
+        "Goal_E": 10,
+        "Goal_F": 8,
         "Goal_G": 4
     },
     "agent_2": {
         "Goal_A": 0,
-        "Goal_B": 5,
-        "Goal_C": 4,
-        "Goal_D": 3,
-        "Goal_E": 2,
-        "Goal_F": 1,
+        "Goal_B": 50,
+        "Goal_C": 40,
+        "Goal_D": 30,
+        "Goal_E": 20,
+        "Goal_F": 10,
         "Goal_G": 0
     },
     "agent_3": {
         "Goal_A": 0,
-        "Goal_B": 2,
-        "Goal_C": 4,
-        "Goal_D": 4,
-        "Goal_E": 6,
-        "Goal_F": 9,
+        "Goal_B": 23,
+        "Goal_C": 16,
+        "Goal_D": 40,
+        "Goal_E": 60,
+        "Goal_F": 29,
         "Goal_G": 10
     }
 }
